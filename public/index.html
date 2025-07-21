@@ -1,204 +1,153 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rutina de Gimnasio</title>
+  <title>Registro de Rutinas de Gimnasio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-    .calendar-day { padding: 10px; text-align: center; cursor: pointer; }
-    .calendar-day.completed { background-color: #10b981; color: white; }
-    .calendar-day:hover { background-color: #e5e7eb; }
-    .calendar-header { font-weight: bold; text-align: center; padding: 10px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ddd; }
+    .completed { background-color: #10b981; color: white; position: relative; }
+    .completed::after {
+      content: '✔';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 16px;
+      color: white;
+    }
+    .selected { border: 2px solid #3b82f6; }
   </style>
 </head>
-<body class="bg-gray-100 font-sans">
-  <div class="container max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
-    <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Rutina de Gimnasio con Calendario</h1>
-
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Calendario</h2>
-      <div class="flex justify-between items-center mb-4">
-        <button id="prevMonth" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">&lt; Mes Anterior</button>
-        <span id="monthYear" class="text-lg font-semibold"></span>
-        <button id="nextMonth" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mes Siguiente &gt;</button>
-      </div>
-      <div id="calendar" class="calendar-grid"></div>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+    <h1 class="text-2xl font-bold text-center mb-4">Registro de Rutinas de Gimnasio</h1>
+    <div class="flex justify-between mb-4">
+      <button id="prevMonth" class="bg-blue-500 text-white px-4 py-2 rounded">Mes Anterior</button>
+      <h2 id="currentMonth" class="text-xl font-semibold"></h2>
+      <button id="nextMonth" class="bg-blue-500 text-white px-4 py-2 rounded">Mes Siguiente</button>
     </div>
-
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Detalles de la Rutina</h2>
-      <p id="routineDetails" class="text-gray-600">Seleccioná un día para ver la rutina.</p>
+    <div id="calendar" class="calendar-grid mb-4"></div>
+    <div id="routineDetails" class="hidden mb-4 p-4 bg-gray-50 rounded">
+      <h3 class="text-lg font-semibold">Detalles de la Rutina</h3>
+      <p id="routineText" class="text-gray-700"></p>
+      <p id="detailsText" class="text-gray-700"></p>
+      <p id="caloriesText" class="text-gray-700"></p>
     </div>
-
-    <div>
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Detalles del Día</h2>
-      <div class="mb-4">
-        <label for="routineSelect" class="block text-gray-600 mb-2">Seleccionar rutina:</label>
-        <select id="routineSelect" class="w-full p-2 border rounded">
-          <option value="">-- Elegir rutina --</option>
-          <option value="Día A - Full Body A + Cardio">Día A - Full Body A + Cardio</option>
-          <option value="Día B - Full Body B + Cardio">Día B - Full Body B + Cardio</option>
-          <option value="Día C - Repetir Día A">Día C - Repetir Día A</option>
-          <option value="Día D - HIIT + Core">Día D - HIIT + Core</option>
-        </select>
-      </div>
-      <div class="flex items-center mb-4">
-        <input type="checkbox" id="completed" class="mr-2">
-        <label for="completed" class="text-gray-600">Entrenamiento completado</label>
-      </div>
-      <div class="flex gap-4">
-        <button id="saveBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Guardar</button>
-        <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancelar</button>
-      </div>
+    <div class="flex flex-col gap-4">
+      <select id="routineSelect" class="border p-2 rounded">
+        <option value="">Selecciona una rutina</option>
+        <option value="Día A - Full Body A + Cardio">Día A - Full Body A + Cardio</option>
+        <option value="Día B - Full Body B + Cardio">Día B - Full Body B + Cardio</option>
+        <option value="Día C - Tren Superior">Día C - Tren Superior</option>
+        <option value="Día D - Tren Inferior">Día D - Tren Inferior</option>
+      </select>
+      <textarea id="routineDetailsInput" class="border p-2 rounded" placeholder="Ingresa detalles de la rutina (ej. Sentadillas: 3 series x 10 rep)"></textarea>
+      <input type="number" id="caloriesInput" class="border p-2 rounded" placeholder="Calorías quemadas (kcal)" min="0">
+      <label class="flex items-center gap-2">
+        <input type="checkbox" id="completedCheckbox" class="h-5 w-5">
+        <span>Entrenamiento completado</span>
+      </label>
+      <button id="saveRoutine" class="bg-green-500 text-white px-4 py-2 rounded">Guardar</button>
     </div>
   </div>
-
   <script>
-    let selectedDate = null;
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
-
-    const monthYear = document.getElementById('monthYear');
-    const calendar = document.getElementById('calendar');
-    const routineDetails = document.getElementById('routineDetails');
-    const routineSelect = document.getElementById('routineSelect');
-    const completed = document.getElementById('completed');
-    const saveBtn = document.getElementById('saveBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
+    let currentDate = new Date();
+    let selectedDay = null;
+    let routines = [];
 
     async function loadCalendar() {
-      calendar.innerHTML = '';
-      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      monthYear.textContent = `${new Date(currentYear, currentMonth).toLocaleString('es-AR', { month: 'long' })} ${currentYear}`;
+      const monthYear = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+      document.getElementById('currentMonth').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+      const calendar = document.getElementById('calendar');
+      calendar.innerHTML = '<div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>';
 
-      // Días de la semana
-      const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-      daysOfWeek.forEach(day => {
-        const div = document.createElement('div');
-        div.className = 'calendar-header';
-        div.textContent = day;
-        calendar.appendChild(div);
-      });
+      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+      const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 
-      // Días vacíos antes del primer día
-      for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
-        calendar.appendChild(document.createElement('div'));
+      for (let i = 0; i < firstDay; i++) {
+        calendar.innerHTML += '<div></div>';
       }
 
-      // Días del mes
-      const response = await fetch('/api/routines');
-      const routines = await response.json();
-      for (let i = 1; i <= daysInMonth; i++) {
-        const date = `${i.toString().padStart(2, '0')}/${(currentMonth + 1).toString().padStart(2, '0')}/${currentYear}`;
-        const div = document.createElement('div');
-        div.className = 'calendar-day';
-        div.textContent = i;
+      try {
+        const response = await fetch('/api/routines');
+        routines = await response.json();
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+        alert('Error al cargar datos');
+        routines = [];
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = `${day.toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
         const routine = routines.find(r => r.date === date);
-        if (routine && routine.completed) div.className += ' completed';
+        const div = document.createElement('div');
+        div.className = `calendar-day ${routine && routine.completed ? 'completed' : ''} ${selectedDay === date ? 'selected' : ''}`;
+        div.textContent = day;
         div.onclick = () => selectDay(date, routine);
         calendar.appendChild(div);
       }
     }
 
     function selectDay(date, routine) {
-      selectedDate = date;
-      routineDetails.textContent = routine ? `Rutina: ${routine.routine} ${routine.completed ? '(Completado)' : ''}` : 'No hay rutina asignada.';
-      routineSelect.value = routine ? routine.routine : '';
-      completed.checked = routine ? routine.completed : false;
+      selectedDay = date;
+      document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
+      const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
+      if (dayDiv) dayDiv.classList.add('selected');
+
+      const routineDetails = document.getElementById('routineDetails');
+      const routineText = document.getElementById('routineText');
+      const detailsText = document.getElementById('detailsText');
+      const caloriesText = document.getElementById('caloriesText');
+      routineDetails.classList.remove('hidden');
+      routineText.textContent = routine ? `Rutina: ${routine.routine}` : 'No hay rutina asignada';
+      detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : 'No hay detalles';
+      caloriesText.textContent = routine && routine.caloriesBurned ? `Calorías quemadas: ${routine.caloriesBurned} kcal` : 'No hay calorías registradas';
+      document.getElementById('routineSelect').value = routine ? routine.routine : '';
+      document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : '';
+      document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
+      document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
     }
 
-    saveBtn.onclick = async () => {
-      if (!selectedDate) return alert('Selecciona un día primero.');
-      const routine = routineSelect.value;
-      const isCompleted = completed.checked;
-      if (!routine) return alert('Selecciona una rutina.');
+    async function saveRoutine() {
+      if (!selectedDay) {
+        alert('Selecciona un día');
+        return;
+      }
+      const routine = document.getElementById('routineSelect').value;
+      const details = document.getElementById('routineDetailsInput').value;
+      const caloriesBurned = parseInt(document.getElementById('caloriesInput').value) || 0;
+      const completed = document.getElementById('completedCheckbox').checked;
+
       try {
         const response = await fetch('/api/routines', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ date: selectedDate, routine, completed: isCompleted })
+          body: JSON.stringify({ date: selectedDay, routine, details, caloriesBurned, completed })
         });
+        const result = await response.json();
         if (response.ok) {
-          alert('Rutina guardada!');
-          routineSelect.value = '';
-          completed.checked = false;
-          routineDetails.textContent = 'Seleccioná un día para ver la rutina.';
-          selectedDate = null;
+          alert('Rutina guardada');
           loadCalendar();
         } else {
-          alert('Error al guardar la rutina.');
+          alert(result.error || 'Error al guardar la rutina');
         }
       } catch (error) {
-        alert('Error de conexión. Intenta de nuevo.');
+        console.error('Error al guardar:', error);
+        alert('Error al guardar la rutina');
       }
-    };
-
-    cancelBtn.onclick = () => {
-      selectedDate = null;
-      routineSelect.value = '';
-      completed.checked = false;
-      routineDetails.textContent = 'Seleccioná un día para ver la rutina.';
-    };
+    }
 
     document.getElementById('prevMonth').onclick = () => {
-      currentMonth--;
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
+      currentDate.setMonth(currentDate.getMonth() - 1);
       loadCalendar();
     };
-
     document.getElementById('nextMonth').onclick = () => {
-      currentMonth++;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
+      currentDate.setMonth(currentDate.getMonth() + 1);
       loadCalendar();
     };
+    document.getElementById('saveRoutine').onclick = saveRoutine;
 
     loadCalendar();
   </script>
