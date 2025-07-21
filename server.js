@@ -8,13 +8,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Conectar a MongoDB Atlas
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => console.log('Conectado a MongoDB Atlas')).catch(err => console.error('Error MongoDB:', err));
 
-// Esquema y modelo
 const routineSchema = new mongoose.Schema({
   date: String,
   routine: String,
@@ -22,7 +20,6 @@ const routineSchema = new mongoose.Schema({
 });
 const Routine = mongoose.model('Routine', routineSchema);
 
-// Rutas API
 app.post('/api/routines', async (req, res) => {
   try {
     const { date, routine, completed } = req.body;
