@@ -7,16 +7,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ddd; }
-    .completed { background-color: #10b981; color: white; position: relative; }
-    .completed::after {
-      content: '✔';
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      font-size: 16px;
-      color: white;
-    }
+    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ddd; position: relative; }
+    .completed { background-color: #10b981; color: white; }
+    .completed svg { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; }
     .selected { border: 2px solid #3b82f6; }
   </style>
 </head>
@@ -53,6 +46,13 @@
     </div>
   </div>
   <script>
+    const routineDetailsMap = {
+      "Día A - Full Body A + Cardio": "Sentadillas: 3 series x 10 rep\nPress de banca: 3 series x 8 rep\nRemo con barra: 3 series x 10 rep\nPlancha: 3 x 30s\nCardio: 20 min cinta",
+      "Día B - Full Body B + Cardio": "Peso muerto: 3 series x 8 rep\nPress militar: 3 series x 10 rep\nDominadas: 3 series x 8 rep\nAbdominales: 3 x 15 rep\nCardio: 15 min elíptica",
+      "Día C - Tren Superior": "Press de banca inclinado: 3 series x 10 rep\nCurl de bíceps: 3 series x 12 rep\nFondos en paralelas: 3 series x 10 rep\nElevaciones laterales: 3 series x 12 rep",
+      "Día D - Tren Inferior": "Sentadillas hack: 3 series x 10 rep\nPrensa de piernas: 3 series x 12 rep\nZancadas: 3 series x 10 rep\nElevación de talones: 3 series x 15 rep"
+    };
+
     let currentDate = new Date();
     let selectedDay = null;
     let routines = [];
@@ -85,6 +85,9 @@
         const div = document.createElement('div');
         div.className = `calendar-day ${routine && routine.completed ? 'completed' : ''} ${selectedDay === date ? 'selected' : ''}`;
         div.textContent = day;
+        if (routine && routine.completed) {
+          div.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.2l-3.5-3.5a1 1 0 00-1.4 1.4l4.2 4.2a1 1 0 001.4 0l8-8a1 1 0 00-1.4-1.4L9 16.2z"/></svg>`;
+        }
         div.onclick = () => selectDay(date, routine);
         calendar.appendChild(div);
       }
@@ -102,10 +105,10 @@
       const caloriesText = document.getElementById('caloriesText');
       routineDetails.classList.remove('hidden');
       routineText.textContent = routine ? `Rutina: ${routine.routine}` : 'No hay rutina asignada';
-      detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : 'No hay detalles';
+      detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : routine ? `Detalles: ${routineDetailsMap[routine.routine] || 'No hay detalles predefinidos'}` : 'No hay detalles';
       caloriesText.textContent = routine && routine.caloriesBurned ? `Calorías quemadas: ${routine.caloriesBurned} kcal` : 'No hay calorías registradas';
       document.getElementById('routineSelect').value = routine ? routine.routine : '';
-      document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : '';
+      document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : routine ? routineDetailsMap[routine.routine] || '' : '';
       document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
       document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
     }
@@ -116,7 +119,7 @@
         return;
       }
       const routine = document.getElementById('routineSelect').value;
-      const details = document.getElementById('routineDetailsInput').value;
+      const details = document.getElementById('routineDetailsInput').value || routineDetailsMap[routine] || '';
       const caloriesBurned = parseInt(document.getElementById('caloriesInput').value) || 0;
       const completed = document.getElementById('completedCheckbox').checked;
 
@@ -138,6 +141,11 @@
         alert('Error al guardar la rutina');
       }
     }
+
+    document.getElementById('routineSelect').onchange = () => {
+      const routine = document.getElementById('routineSelect').value;
+      document.getElementById('routineDetailsInput').value = routine ? routineDetailsMap[routine] || '' : '';
+    };
 
     document.getElementById('prevMonth').onclick = () => {
       currentDate.setMonth(currentDate.getMonth() - 1);
