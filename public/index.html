@@ -28,7 +28,7 @@
       <p id="detailsText" class="text-gray-700"></p>
       <p id="caloriesText" class="text-gray-700"></p>
     </div>
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4 mb-6">
       <select id="routineSelect" class="border p-2 rounded">
         <option value="">Selecciona una rutina</option>
         <option value="Día A - Full Body A + Cardio">Día A - Full Body A + Cardio</option>
@@ -43,6 +43,29 @@
         <span>Entrenamiento completado</span>
       </label>
       <button id="saveRoutine" class="bg-green-500 text-white px-4 py-2 rounded">Guardar</button>
+    </div>
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-2">Resumen de Actividades Completadas</h3>
+      <div class="flex flex-col sm:flex-row gap-4 mb-4">
+        <div>
+          <label for="fromMonth" class="block text-sm font-medium">Mes desde:</label>
+          <input type="month" id="fromMonth" class="border p-2 rounded">
+        </div>
+        <div>
+          <label for="toMonth" class="block text-sm font-medium">Mes hasta:</label>
+          <input type="month" id="toMonth" class="border p-2 rounded">
+        </div>
+        <button id="exportCsv" class="bg-blue-500 text-white px-4 py-2 rounded self-end">Exportar a CSV</button>
+      </div>
+      <table id="completedTable" class="w-full border-collapse border border-gray-300">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border border-gray-300 p-2">Fecha</th>
+            <th class="border border-gray-300 p-2">Calorías Quemadas (kcal)</th>
+          </tr>
+        </thead>
+        <tbody id="completedTableBody"></tbody>
+      </table>
     </div>
   </div>
   <script>
@@ -79,6 +102,7 @@
         routines = [];
       }
 
+      // Llenar el calendario
       for (let day = 1; day <= daysInMonth; day++) {
         const date = `${day.toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
         const routine = routines.find(r => r.date === date);
@@ -91,6 +115,78 @@
         div.onclick = () => selectDay(date, routine);
         calendar.appendChild(div);
       }
+
+      // Llenar la tabla de actividades completadas
+      updateCompletedTable();
+    }
+
+    function updateCompletedTable() {
+      const fromMonth = document.getElementById('fromMonth').value;
+      const toMonth = document.getElementById('toMonth').value;
+      const tableBody = document.getElementById('completedTableBody');
+      tableBody.innerHTML = '';
+
+      // Convertir fechas de filtro a objetos Date
+      let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+      let toDate = toMonth ? new Date(toMonth + '-01') : null;
+      if (toDate) {
+        toDate.setMonth(toDate.getMonth() + 1); // Incluir todo el mes
+        toDate.setDate(0); // Último día del mes
+      }
+
+      // Filtrar rutinas completadas
+      let filteredRoutines = routines.filter(r => r.completed);
+      if (fromDate || toDate) {
+        filteredRoutines = filteredRoutines.filter(r => {
+          const [day, month, year] = r.date.split('/');
+          const routineDate = new Date(`${year}-${month}-${day}`);
+          return (!fromDate || routineDate >= fromDate) && (!toDate || routineDate <= toDate);
+        });
+      }
+
+      if (filteredRoutines.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="2" class="border border-gray-300 p-2 text-center">No hay actividades completadas</td></tr>';
+      } else {
+        filteredRoutines.forEach(routine => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="border border-gray-300 p-2">${routine.date}</td>
+            <td class="border border-gray-300 p-2">${routine.caloriesBurned || 0} kcal</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+    }
+
+    function exportToCsv() {
+      const fromMonth = document.getElementById('fromMonth').value;
+      const toMonth = document.getElementById('toMonth').value;
+      let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+      let toDate = toMonth ? new Date(toMonth + '-01') : null;
+      if (toDate) {
+        toDate.setMonth(toDate.getMonth() + 1);
+        toDate.setDate(0);
+      }
+
+      let filteredRoutines = routines.filter(r => r.completed);
+      if (fromDate || toDate) {
+        filteredRoutines = filteredRoutines.filter(r => {
+          const [day, month, year] = r.date.split('/');
+          const routineDate = new Date(`${year}-${month}-${day}`);
+          return (!fromDate || routineDate >= fromDate) && (!toDate || routineDate <= toDate);
+        });
+      }
+
+      const csvContent = [
+        'Fecha,Calorías Quemadas (kcal)',
+        ...filteredRoutines.map(r => `${r.date},${r.caloriesBurned || 0}`)
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `actividades_completadas_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
     }
 
     function selectDay(date, routine) {
@@ -156,6 +252,9 @@
       loadCalendar();
     };
     document.getElementById('saveRoutine').onclick = saveRoutine;
+    document.getElementById('fromMonth').onchange = updateCompletedTable;
+    document.getElementById('toMonth').onchange = updateCompletedTable;
+    document.getElementById('exportCsv').onclick = exportToCsv;
 
     loadCalendar();
   </script>
