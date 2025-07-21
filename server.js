@@ -16,19 +16,21 @@ mongoose.connect(process.env.MONGODB_URI, {
 const routineSchema = new mongoose.Schema({
   date: String,
   routine: String,
+  details: String,
+  caloriesBurned: Number, // Nuevo campo para calorías quemadas
   completed: Boolean,
 });
 const Routine = mongoose.model('Routine', routineSchema);
 
 app.post('/api/routines', async (req, res) => {
   try {
-    const { date, routine, completed } = req.body;
+    const { date, routine, details, caloriesBurned, completed } = req.body;
     if (!date || !routine) {
       return res.status(400).json({ error: 'Faltan datos' });
     }
     await Routine.findOneAndUpdate(
       { date },
-      { date, routine, completed },
+      { date, routine, details, caloriesBurned, completed },
       { upsert: true, new: true }
     );
     res.status(201).json({ message: 'Rutina guardada' });
