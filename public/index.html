@@ -3,71 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Rutinas de Gimnasio</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>💪 Registro de Rutinas de Gimnasio 🔥</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css?v=2.2.19" rel="stylesheet" onerror="document.getElementById('fallback-style').innerHTML = 'body { font-family: Arial, sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); } .container { max-width: 95%; margin: auto; } .card { background: white; padding: 12px; margin-bottom: 12px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); } .btn-primary { background: linear-gradient(to right, #991b1b, #1f2937); color: white; padding: 10px; border-radius: 12px; } .input-field, select { width: 100%; padding: 10px; border: 2px solid #ef4444; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); } h1, h2 { font-weight: bold; color: #7f1d1d; text-align: center; }';">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js?v=4.4.4"></script>
+  <style id="fallback-style"></style>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); }
+    .container { max-width: 95%; margin: 0 auto; padding: 0.5rem; }
+    @media (min-width: 640px) { .container { max-width: 640px; padding: 1rem; } }
+    @media (min-width: 768px) { .container { max-width: 768px; } }
+    @media (min-width: 1024px) { .container { max-width: 896px; } }
+    .card { background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 0.75rem; margin-bottom: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card:hover { transform: translateY(-0.25rem); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+    .btn-primary { background: linear-gradient(to right, #991b1b, #1f2937); color: white; font-weight: 600; border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.3s ease, transform 0.2s ease; }
+    .btn-primary:hover { background: linear-gradient(to right, #7f1d1d, #111827); transform: scale(1.02); }
+    .btn-primary:focus { outline: none; box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
+    .tab { padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; color: #1f2937; background: #fee2e2; cursor: pointer; transition: all 0.2s ease; font-size: 0.75rem; }
+    .tab:hover { background: #fecaca; }
+    .tab.active { background: #ef4444; color: white; }
+    @media (min-width: 640px) { .tab { padding: 0.5rem 1.25rem; font-size: 0.875rem; } }
+    .input-field { width: 100%; padding: 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
+    .input-field:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
+    .input-field:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .select-wrapper { position: relative; }
+    .select-wrapper select { appearance: none; width: 100%; padding: 0.75rem 2.5rem 0.75rem 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
+    .select-wrapper select:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
+    .select-wrapper select:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .select-wrapper::after { content: '▼'; position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #b91c1c; font-size: 0.875rem; pointer-events: none; }
+    @media (min-width: 640px) { .input-field, .select-wrapper select { padding: 0.875rem; font-size: 1rem; } .select-wrapper select { padding-right: 2.75rem; } .select-wrapper::after { right: 1rem; font-size: 1rem; } }
+    .error { color: #dc2626; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 500; }
+    @media (min-width: 640px) { .error { font-size: 0.875rem; } }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ddd; position: relative; }
-    .completed { background-color: #10b981; color: white; }
+    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 2px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; transition: all 0.2s ease; }
+    .calendar-day:hover { background: #fee2e2; }
+    .completed { background: #ef4444; color: white; border-color: #b91c1c; }
     .completed svg { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; }
-    .selected { border: 2px solid #3b82f6; }
+    .selected { border: 2px solid #1f2937; box-shadow: 0 0 0 3px rgba(31,41,55,0.3); }
+    .tips { background: linear-gradient(to right, #fee2e2, #fecaca); padding: 0.75rem; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    @media (min-width: 640px) { .tips { padding: 1rem; } }
+    canvas { max-width: 300px; margin: 0 auto; }
+    @media (min-width: 640px) { canvas { max-width: 390px; } }
+    @media (min-width: 768px) { canvas { max-width: 450px; } }
+    @media (min-width: 1024px) { canvas { max-width: 540px; } }
+    h1 { font-size: 1.5rem; font-weight: 800; color: #7f1d1d; text-align: center; margin-bottom: 0.75rem; transition: transform 0.3s ease; }
+    h1:hover { transform: scale(1.05); }
+    @media (min-width: 640px) { h1 { font-size: 1.75rem; } }
+    @media (min-width: 768px) { h1 { font-size: 2rem; } }
+    @media (min-width: 1024px) { h1 { font-size: 2.5rem; } }
+    h2 { font-size: 1rem; font-weight: 700; color: #b91c1c; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    @media (min-width: 640px) { h2 { font-size: 1.25rem; } }
+    @media (min-width: 768px) { h2 { font-size: 1.5rem; } }
+    .summary { color: #1f2937; font-size: 0.75rem; margin-top: 0.5rem; text-align: center; }
+    @media (min-width: 640px) { .summary { font-size: 0.875rem; } }
+    .emoji { font-size: 0.875rem; }
+    @media (min-width: 640px) { .emoji { font-size: 1rem; } }
+    @media (min-width: 768px) { .emoji { font-size: 1.125rem; } }
+    .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
   </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-    <h1 class="text-2xl font-bold text-center mb-4">Registro de Rutinas de Gimnasio</h1>
-    <div class="flex justify-between mb-4">
-      <button id="prevMonth" class="bg-blue-500 text-white px-4 py-2 rounded">Mes Anterior</button>
-      <h2 id="currentMonth" class="text-xl font-semibold"></h2>
-      <button id="nextMonth" class="bg-blue-500 text-white px-4 py-2 rounded">Mes Siguiente</button>
-    </div>
-    <div id="calendar" class="calendar-grid mb-4"></div>
-    <div id="routineDetails" class="hidden mb-4 p-4 bg-gray-50 rounded">
-      <h3 class="text-lg font-semibold">Detalles de la Rutina</h3>
-      <p id="routineText" class="text-gray-700"></p>
-      <p id="detailsText" class="text-gray-700"></p>
-      <p id="caloriesText" class="text-gray-700"></p>
-    </div>
-    <div class="flex flex-col gap-4 mb-6">
-      <select id="routineSelect" class="border p-2 rounded">
-        <option value="">Selecciona una rutina</option>
-        <option value="Día A - Full Body A + Cardio">Día A - Full Body A + Cardio</option>
-        <option value="Día B - Full Body B + Cardio">Día B - Full Body B + Cardio</option>
-        <option value="Día C - Tren Superior">Día C - Tren Superior</option>
-        <option value="Día D - Tren Inferior">Día D - Tren Inferior</option>
-      </select>
-      <textarea id="routineDetailsInput" class="border p-2 rounded min-h-[150px]" placeholder="Ingresa detalles de la rutina (ej. Sentadillas: 3 series x 10 rep)"></textarea>
-      <input type="number" id="caloriesInput" class="border p-2 rounded" placeholder="Calorías quemadas (kcal)" min="0">
-      <label class="flex items-center gap-2">
-        <input type="checkbox" id="completedCheckbox" class="h-5 w-5">
-        <span>Entrenamiento completado</span>
-      </label>
-      <button id="saveRoutine" class="bg-green-500 text-white px-4 py-2 rounded">Guardar</button>
-    </div>
-    <div class="mt-6">
-      <h3 class="text-lg font-semibold mb-2">Resumen de Actividades Completadas</h3>
-      <div class="flex flex-col sm:flex-row gap-4 mb-4">
-        <div>
-          <label for="fromMonth" class="block text-sm font-medium">Mes desde:</label>
-          <input type="month" id="fromMonth" class="border p-2 rounded">
+<body>
+  <div class="debug-info" id="debugInfo">Mobile View</div>
+  <div class="container">
+    <div class="card">
+      <h1>💪 ¡Domina Tu Entrenamiento! 🔥</h1>
+
+      <div class="mb-4">
+        <h2><span class="emoji">📅</span> Calendario de Rutinas</h2>
+        <div class="flex justify-between mb-4">
+          <button id="prevMonth" class="btn-primary"><span class="emoji">⬅️</span> Mes Anterior</button>
+          <h3 id="currentMonth" class="text-xl font-semibold text-gray-800"></h3>
+          <button id="nextMonth" class="btn-primary">Mes Siguiente <span class="emoji">➡️</span></button>
         </div>
-        <div>
-          <label for="toMonth" class="block text-sm font-medium">Mes hasta:</label>
-          <input type="month" id="toMonth" class="border p-2 rounded">
-        </div>
-        <button id="exportCsv" class="bg-blue-500 text-white px-4 py-2 rounded self-end">Exportar a CSV</button>
+        <div id="calendar" class="calendar-grid mb-4"></div>
       </div>
-      <table id="completedTable" class="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="border border-gray-300 p-2">Fecha</th>
-            <th class="border border-gray-300 p-2">Calorías Quemadas (kcal)</th>
-          </tr>
-        </thead>
-        <tbody id="completedTableBody"></tbody>
-      </table>
+
+      <div class="mb-4">
+        <h2><span class="emoji">🏋️‍♂️</span> Registrar Rutina</h2>
+        <div class="select-wrapper">
+          <select id="routineSelect" class="input-field mb-3">
+            <option value="">Selecciona una rutina</option>
+            <option value="Día A - Full Body A + Cardio">Día A - Full Body A + Cardio 🏃‍♂️</option>
+            <option value="Día B - Full Body B + Cardio">Día B - Full Body B + Cardio 🚴</option>
+            <option value="Día C - Tren Superior">Día C - Tren Superior 💪</option>
+            <option value="Día D - Tren Inferior">Día D - Tren Inferior 🦵</option>
+          </select>
+        </div>
+        <textarea id="routineDetailsInput" class="input-field mb-3 min-h-[150px]" placeholder="Detalles de la rutina (ej. Sentadillas: 3 series x 10 rep)"></textarea>
+        <input type="number" id="caloriesInput" class="input-field mb-3" placeholder="Calorías quemadas (kcal)" min="0">
+        <label class="flex items-center gap-2 mb-3">
+          <input type="checkbox" id="completedCheckbox" class="h-5 w-5 text-red-600">
+          <span>Entrenamiento completado ✅</span>
+        </label>
+        <button id="saveRoutine" class="btn-primary w-full"><span class="emoji">💾</span> Guardar</button>
+        <p id="error" class="error" style="display: none;"></p>
+      </div>
+
+      <div id="routineDetails" class="hidden mb-4 p-4 bg-gray-50 rounded-lg">
+        <h2><span class="emoji">📋</span> Detalles del Día</h2>
+        <p id="routineText" class="text-gray-700"></p>
+        <p id="detailsText" class="text-gray-700"></p>
+        <p id="caloriesText" class="text-gray-700"></p>
+      </div>
+
+      <div class="mb-4">
+        <h2><span class="emoji">📊</span> Progreso</h2>
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <div class="tab active" onclick="showView('weekly')">Semanal 📊</div>
+          <div class="tab" onclick="showView('pie')">Distribución 🥧</div>
+          <div class="tab" onclick="showView('table')">Tabla 📋</div>
+        </div>
+        <div id="weeklyView" class="card">
+          <h2><span class="emoji">📅</span> Calorías Semanales</h2>
+          <canvas id="weeklyChart"></canvas>
+          <p id="weeklySummary" class="summary"></p>
+        </div>
+        <div id="pieView" class="card" style="display: none;">
+          <h2><span class="emoji">🥧</span> Distribución de Rutinas</h2>
+          <canvas id="pieChart"></canvas>
+          <p id="pieSummary" class="summary"></p>
+        </div>
+        <div id="tableView" class="card" style="display: none;">
+          <h2><span class="emoji">📋</span> Resumen de Actividades</h2>
+          <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <div>
+              <label for="fromMonth" class="block text-sm font-medium">Mes desde:</label>
+              <input type="month" id="fromMonth" class="input-field">
+            </div>
+            <div>
+              <label for="toMonth" class="block text-sm font-medium">Mes hasta:</label>
+              <input type="month" id="toMonth" class="input-field">
+            </div>
+            <button id="exportCsv" class="btn-primary self-end"><span class="emoji">📥</span> Exportar a CSV</button>
+          </div>
+          <table id="completedTable" class="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border border-gray-300 p-2">Fecha</th>
+                <th class="border border-gray-300 p-2">Calorías Quemadas (kcal)</th>
+              </tr>
+            </thead>
+            <tbody id="completedTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tips">
+        <h2><span class="emoji">💡</span> Consejos para Triunfar</h2>
+        <ul class="list-disc pl-4 text-gray-600 text-xs sm:text-sm">
+          <li>Apunta a 3-5 sesiones semanales para resultados óptimos. 🏋️‍♂️</li>
+          <li>Hidrátate antes, durante y después: 2-3L de agua diarios. 💧</li>
+          <li>Combina fuerza y cardio para maximizar calorías quemadas. 🔥</li>
+          <li>Descansa 60-90s entre series para mantener intensidad. ⏱️</li>
+        </ul>
+      </div>
     </div>
   </div>
+
   <script>
     const routineDetailsMap = {
       "Día A - Full Body A + Cardio": "Sentadillas: 3 series x 10 rep\nPress de banca: 3 series x 8 rep\nRemo con barra: 3 series x 10 rep\nPlancha: 3 x 30s\nCardio: 20 min cinta",
@@ -78,9 +170,26 @@
 
     let currentDate = new Date();
     let selectedDay = null;
-    let routines = [];
+    let weeklyChart, pieChart;
+
+    function updateDebugInfo() {
+      const debugInfo = document.getElementById('debugInfo');
+      if (!debugInfo) return;
+      const width = window.innerWidth;
+      if (width >= 1024) {
+        debugInfo.textContent = 'Desktop View (1024px+)';
+      } else if (width >= 768) {
+        debugInfo.textContent = 'Tablet View (768px-1023px)';
+      } else if (width >= 640) {
+        debugInfo.textContent = 'Small Tablet View (640px-767px)';
+      } else {
+        debugInfo.textContent = 'Mobile View (<640px)';
+      }
+      console.log('CSS loaded, current view:', debugInfo.textContent);
+    }
 
     async function loadCalendar() {
+      console.log('Loading calendar...');
       const monthYear = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
       document.getElementById('currentMonth').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
       const calendar = document.getElementById('calendar');
@@ -88,21 +197,30 @@
 
       const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
       const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+      let routines = [];
+
+      try {
+        routines = JSON.parse(localStorage.getItem('routines') || '[]');
+        console.log('Retrieved routines from localStorage:', routines);
+        if (!routines.length) {
+          console.warn('No routines in localStorage, using mock data');
+          const today = new Date().toLocaleDateString('es-AR');
+          routines = [
+            { date: today, routine: 'Día A - Full Body A + Cardio', details: routineDetailsMap['Día A - Full Body A + Cardio'], caloriesBurned: 500, completed: true },
+            { date: today, routine: 'Día B - Full Body B + Cardio', details: routineDetailsMap['Día B - Full Body B + Cardio'], caloriesBurned: 450, completed: true }
+          ];
+          localStorage.setItem('routines', JSON.stringify(routines));
+        }
+      } catch (error) {
+        console.error('Error accessing localStorage:', error);
+        document.getElementById('error').textContent = 'Error al cargar datos. Intenta recargar. 🔌';
+        document.getElementById('error').style.display = 'block';
+      }
 
       for (let i = 0; i < firstDay; i++) {
         calendar.innerHTML += '<div></div>';
       }
 
-      try {
-        const response = await fetch('/api/routines');
-        routines = await response.json();
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
-        alert('Error al cargar datos');
-        routines = [];
-      }
-
-      // Llenar el calendario
       for (let day = 1; day <= daysInMonth; day++) {
         const date = `${day.toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
         const routine = routines.find(r => r.date === date);
@@ -116,8 +234,214 @@
         calendar.appendChild(div);
       }
 
-      // Llenar la tabla de actividades completadas
-      updateCompletedTable();
+      updateViews();
+    }
+
+    function selectDay(date, routine) {
+      selectedDay = date;
+      document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
+      const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
+      if (dayDiv) dayDiv.classList.add('selected');
+
+      const routineDetails = document.getElementById('routineDetails');
+      const routineText = document.getElementById('routineText');
+      const detailsText = document.getElementById('detailsText');
+      const caloriesText = document.getElementById('caloriesText');
+      routineDetails.classList.remove('hidden');
+      routineText.textContent = routine ? `Rutina: ${routine.routine} 🏋️‍♂️` : 'No hay rutina asignada';
+      detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : routine ? `Detalles: ${routineDetailsMap[routine.routine] || 'No hay detalles predefinidos'}` : 'No hay detalles';
+      caloriesText.textContent = routine && routine.caloriesBurned ? `Calorías quemadas: ${routine.caloriesBurned} kcal 🔥` : 'No hay calorías registradas';
+      document.getElementById('routineSelect').value = routine ? routine.routine : '';
+      document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : routine ? routineDetailsMap[routine.routine] || '' : '';
+      document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
+      document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
+    }
+
+    async function saveRoutine() {
+      console.log('Saving routine...');
+      if (!selectedDay) {
+        document.getElementById('error').textContent = 'Selecciona un día 📅';
+        document.getElementById('error').style.display = 'block';
+        return;
+      }
+      const routine = document.getElementById('routineSelect').value;
+      const details = document.getElementById('routineDetailsInput').value || routineDetailsMap[routine] || '';
+      const caloriesBurned = parseInt(document.getElementById('caloriesInput').value) || 0;
+      const completed = document.getElementById('completedCheckbox').checked;
+      if (!routine || caloriesBurned < 0) {
+        document.getElementById('error').textContent = 'Selecciona una rutina y calorías válidas ⚠️';
+        document.getElementById('error').style.display = 'block';
+        return;
+      }
+
+      try {
+        let routines = JSON.parse(localStorage.getItem('routines') || '[]');
+        const existingIndex = routines.findIndex(r => r.date === selectedDay);
+        const routineData = { date: selectedDay, routine, details, caloriesBurned, completed };
+        if (existingIndex >= 0) {
+          routines[existingIndex] = routineData;
+        } else {
+          routines.push(routineData);
+        }
+        localStorage.setItem('routines', JSON.stringify(routines));
+        console.log('Saved routine to localStorage:', routineData);
+        alert('¡Rutina guardada! 🎉');
+        document.getElementById('error').style.display = 'none';
+        loadCalendar();
+      } catch (error) {
+        console.error('Error saving routine:', error);
+        document.getElementById('error').textContent = 'Error al guardar. Intenta de nuevo 🔌';
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    function getWeekDates() {
+      const today = new Date();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+      return Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        return date.toLocaleDateString('es-AR');
+      });
+    }
+
+    async function updateViews() {
+      console.log('Updating views...');
+      const error = document.getElementById('error');
+      if (!error) {
+        console.error('Error element not found');
+        return;
+      }
+      try {
+        let routines = [];
+        try {
+          routines = JSON.parse(localStorage.getItem('routines') || '[]');
+          console.log('Retrieved routines for charts:', routines);
+          if (!routines.length) {
+            console.warn('No routines for charts, using mock data');
+            const today = new Date().toLocaleDateString('es-AR');
+            routines = [
+              { date: today, routine: 'Día A - Full Body A + Cardio', details: routineDetailsMap['Día A - Full Body A + Cardio'], caloriesBurned: 500, completed: true },
+              { date: today, routine: 'Día B - Full Body B + Cardio', details: routineDetailsMap['Día B - Full Body B + Cardio'], caloriesBurned: 450, completed: true }
+            ];
+            localStorage.setItem('routines', JSON.stringify(routines));
+          }
+        } catch (err) {
+          console.warn('Error accessing localStorage for charts:', err);
+          error.textContent = 'Error al cargar datos. Intenta recargar 🔌';
+          error.style.display = 'block';
+          return;
+        }
+
+        // Weekly Chart
+        const weekDates = getWeekDates();
+        const weeklyCalories = weekDates.map(date => {
+          const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
+          return dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
+        });
+        const weeklySummary = document.getElementById('weeklySummary');
+        if (weeklySummary) {
+          const total = weeklyCalories.reduce((sum, cal) => sum + cal, 0);
+          weeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
+        } else {
+          console.warn('Weekly summary element not found');
+        }
+
+        const weeklyCanvas = document.getElementById('weeklyChart');
+        if (weeklyCanvas && typeof Chart !== 'undefined') {
+          if (weeklyChart) weeklyChart.destroy();
+          console.log('Initializing weekly chart with data:', weeklyCalories);
+          weeklyChart = new Chart(weeklyCanvas, {
+            type: 'bar',
+            data: {
+              labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+              datasets: [{
+                label: 'Calorías Quemadas',
+                data: weeklyCalories.length ? weeklyCalories : [100, 200, 150, 300, 250, 200, 100],
+                backgroundColor: '#ef4444',
+                borderColor: '#b91c1c',
+                borderWidth: 1,
+                borderRadius: 4
+              }]
+            },
+            options: {
+              scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Calorías', font: { size: 14 } } },
+                x: { title: { display: true, text: 'Días', font: { size: 14 } } }
+              },
+              plugins: { legend: { display: false } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+        } else {
+          console.error('Weekly chart canvas or Chart.js not available:', { canvas: !!weeklyCanvas, chartJs: typeof Chart });
+          error.textContent = 'Error al cargar el gráfico semanal. Intenta recargar 🔄';
+          error.style.display = 'block';
+        }
+
+        // Pie Chart
+        const routineTypes = Object.keys(routineDetailsMap);
+        const routineCounts = routineTypes.map(routine => {
+          return routines.filter(r => r.routine === routine && r.completed).length;
+        });
+        const validRoutineCounts = routineCounts.every(count => count === 0) ? [2, 1, 0, 0] : routineCounts;
+        console.log('Pie chart routine counts:', routineCounts, 'Valid data:', validRoutineCounts);
+        const pieSummary = document.getElementById('pieSummary');
+        if (pieSummary) {
+          const total = validRoutineCounts.reduce((sum, count) => sum + count, 0);
+          pieSummary.textContent = `Total de rutinas completadas: ${total}`;
+        } else {
+          console.warn('Pie summary element not found');
+        }
+
+        const pieCanvas = document.getElementById('pieChart');
+        if (pieCanvas && typeof Chart !== 'undefined') {
+          if (pieChart) pieChart.destroy();
+          console.log('Initializing pie chart with data:', validRoutineCounts);
+          pieChart = new Chart(pieCanvas, {
+            type: 'pie',
+            data: {
+              labels: routineTypes.map(r => r + (r.includes('Cardio') ? ' 🏃‍♂️' : r.includes('Superior') ? ' 💪' : ' 🦵')),
+              datasets: [{
+                label: 'Rutinas Completadas',
+                data: validRoutineCounts,
+                backgroundColor: ['#f87171', '#ef4444', '#dc2626', '#b91c1c'],
+                borderColor: '#ffffff',
+                borderWidth: 1,
+                hoverOffset: 12
+              }]
+            },
+            options: {
+              plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 14 } } },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const value = context.raw || 0;
+                      const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                      const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                      return `${context.label}: ${value} (${percentage}%)`;
+                    }
+                  }
+                }
+              },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+        } else {
+          console.error('Pie chart canvas or Chart.js not available:', { canvas: !!pieCanvas, chartJs: typeof Chart });
+          error.textContent = 'Error al cargar el gráfico de distribución. Intenta recargar 🔄';
+          error.style.display = 'block';
+        }
+
+        // Table View
+        updateCompletedTable();
+      } catch (err) {
+        console.error('Detailed error in updateViews:', err.message, err.stack);
+        error.textContent = 'Error al cargar datos. Intenta recargar 🔌';
+        error.style.display = 'block';
+      }
     }
 
     function updateCompletedTable() {
@@ -126,15 +450,14 @@
       const tableBody = document.getElementById('completedTableBody');
       tableBody.innerHTML = '';
 
-      // Convertir fechas de filtro a objetos Date
+      let routines = JSON.parse(localStorage.getItem('routines') || '[]');
       let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
       let toDate = toMonth ? new Date(toMonth + '-01') : null;
       if (toDate) {
-        toDate.setMonth(toDate.getMonth() + 1); // Incluir todo el mes
-        toDate.setDate(0); // Último día del mes
+        toDate.setMonth(toDate.getMonth() + 1);
+        toDate.setDate(0);
       }
 
-      // Filtrar rutinas completadas
       let filteredRoutines = routines.filter(r => r.completed);
       if (fromDate || toDate) {
         filteredRoutines = filteredRoutines.filter(r => {
@@ -145,13 +468,13 @@
       }
 
       if (filteredRoutines.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="2" class="border border-gray-300 p-2 text-center">No hay actividades completadas</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="2" class="border border-gray-300 p-2 text-center">No hay actividades completadas 😔</td></tr>';
       } else {
         filteredRoutines.forEach(routine => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td class="border border-gray-300 p-2">${routine.date}</td>
-            <td class="border border-gray-300 p-2">${routine.caloriesBurned || 0} kcal</td>
+            <td class="border border-gray-300 p-2">${routine.caloriesBurned || 0} kcal 🔥</td>
           `;
           tableBody.appendChild(row);
         });
@@ -168,6 +491,7 @@
         toDate.setDate(0);
       }
 
+      let routines = JSON.parse(localStorage.getItem('routines') || '[]');
       let filteredRoutines = routines.filter(r => r.completed);
       if (fromDate || toDate) {
         filteredRoutines = filteredRoutines.filter(r => {
@@ -189,52 +513,23 @@
       link.click();
     }
 
-    function selectDay(date, routine) {
-      selectedDay = date;
-      document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
-      const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
-      if (dayDiv) dayDiv.classList.add('selected');
-
-      const routineDetails = document.getElementById('routineDetails');
-      const routineText = document.getElementById('routineText');
-      const detailsText = document.getElementById('detailsText');
-      const caloriesText = document.getElementById('caloriesText');
-      routineDetails.classList.remove('hidden');
-      routineText.textContent = routine ? `Rutina: ${routine.routine}` : 'No hay rutina asignada';
-      detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : routine ? `Detalles: ${routineDetailsMap[routine.routine] || 'No hay detalles predefinidos'}` : 'No hay detalles';
-      caloriesText.textContent = routine && routine.caloriesBurned ? `Calorías quemadas: ${routine.caloriesBurned} kcal` : 'No hay calorías registradas';
-      document.getElementById('routineSelect').value = routine ? routine.routine : '';
-      document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : routine ? routineDetailsMap[routine.routine] || '' : '';
-      document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
-      document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
-    }
-
-    async function saveRoutine() {
-      if (!selectedDay) {
-        alert('Selecciona un día');
-        return;
-      }
-      const routine = document.getElementById('routineSelect').value;
-      const details = document.getElementById('routineDetailsInput').value || routineDetailsMap[routine] || '';
-      const caloriesBurned = parseInt(document.getElementById('caloriesInput').value) || 0;
-      const completed = document.getElementById('completedCheckbox').checked;
-
-      try {
-        const response = await fetch('/api/routines', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ date: selectedDay, routine, details, caloriesBurned, completed })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          alert('Rutina guardada');
-          loadCalendar();
-        } else {
-          alert(result.error || 'Error al guardar la rutina');
-        }
-      } catch (error) {
-        console.error('Error al guardar:', error);
-        alert('Error al guardar la rutina');
+    function showView(view) {
+      console.log('Switching to view:', view);
+      const weeklyView = document.getElementById('weeklyView');
+      const pieView = document.getElementById('pieView');
+      const tableView = document.getElementById('tableView');
+      if (weeklyView && pieView && tableView) {
+        weeklyView.style.display = view === 'weekly' ? 'block' : 'none';
+        pieView.style.display = view === 'pie' ? 'block' : 'none';
+        tableView.style.display = view === 'table' ? 'block' : 'none';
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        const activeTab = document.querySelector(`.tab[onclick="showView('${view}')"]`);
+        if (activeTab) activeTab.classList.add('active');
+        updateViews();
+      } else {
+        console.error('View elements not found');
+        document.getElementById('error').textContent = 'Error al cambiar vista. Intenta recargar 🔄';
+        document.getElementById('error').style.display = 'block';
       }
     }
 
@@ -256,7 +551,12 @@
     document.getElementById('toMonth').onchange = updateCompletedTable;
     document.getElementById('exportCsv').onclick = exportToCsv;
 
-    loadCalendar();
+    window.onload = function() {
+      console.log('Page loaded, initializing...');
+      updateDebugInfo();
+      window.addEventListener('resize', updateDebugInfo);
+      loadCalendar();
+    };
   </script>
 </body>
 </html>
