@@ -55,7 +55,7 @@
     .tips { background: linear-gradient(to right, #fee2e2, #fecaca); padding: 0.75rem; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     .tips.meal-tips { background: linear-gradient(to right, #e6f3fa, #a3e4d7); }
     @media (min-width: 640px) { .tips { padding: 1rem; } }
-    canvas { max-width: 300px; margin: 0 auto; }
+    canvas { max-width: 300px; width: 100%; margin: 0 auto; }
     @media (min-width: 640px) { canvas { max-width: 390px; } }
     @media (min-width: 768px) { canvas { max-width: 450px; } }
     @media (min-width: 1024px) { canvas { max-width: 540px; } }
@@ -542,7 +542,7 @@
         }
         if (!mealsResponse.ok) {
           const errorData = await mealsResponse.json().catch(() => ({}));
-          throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || mealsResponse.statusText}`);
+          throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || response.statusText}`);
         }
         routines = await routinesResponse.json();
         meals = await mealsResponse.json();
@@ -569,7 +569,7 @@
         routineWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
       }
       const routineWeeklyCanvas = document.getElementById('routineWeeklyChart');
-      if (routineWeeklyCanvas && typeof Chart !== 'undefined') {
+      if (routineWeeklyCanvas && typeof Chart !== 'undefined' && document.getElementById('routineWeeklyView').style.display !== 'none') {
         if (routineWeeklyChart) routineWeeklyChart.destroy();
         console.log('Initializing routine weekly chart:', routineWeeklyCalories);
         routineWeeklyChart = new Chart(routineWeeklyCanvas, {
@@ -591,6 +591,8 @@
             animation: { duration: 600, easing: 'easeOutQuart' }
           }
         });
+        routineWeeklyCanvas.width = routineWeeklyCanvas.parentElement.clientWidth;
+        routineWeeklyChart.resize();
       }
 
       // Routine Pie Chart
@@ -602,7 +604,7 @@
         routinePieSummary.textContent = `Total de rutinas completadas: ${total}`;
       }
       const routinePieCanvas = document.getElementById('routinePieChart');
-      if (routinePieCanvas && typeof Chart !== 'undefined') {
+      if (routinePieCanvas && typeof Chart !== 'undefined' && document.getElementById('routinePieView').style.display !== 'none') {
         if (routinePieChart) routinePieChart.destroy();
         console.log('Initializing routine pie chart:', routineCounts);
         routinePieChart = new Chart(routinePieCanvas, {
@@ -635,6 +637,8 @@
             animation: { duration: 600, easing: 'easeOutQuart' }
           }
         });
+        routinePieCanvas.width = routinePieCanvas.parentElement.clientWidth;
+        routinePieChart.resize();
       }
 
       // Routine Table
@@ -651,7 +655,7 @@
         mealWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
       }
       const mealWeeklyCanvas = document.getElementById('mealWeeklyChart');
-      if (mealWeeklyCanvas && typeof Chart !== 'undefined') {
+      if (mealWeeklyCanvas && typeof Chart !== 'undefined' && document.getElementById('mealWeeklyView').style.display !== 'none') {
         if (mealWeeklyChart) mealWeeklyChart.destroy();
         console.log('Initializing meal weekly chart:', mealWeeklyCalories);
         mealWeeklyChart = new Chart(mealWeeklyCanvas, {
@@ -673,6 +677,8 @@
             animation: { duration: 600, easing: 'easeOutQuart' }
           }
         });
+        mealWeeklyCanvas.width = mealWeeklyCanvas.parentElement.clientWidth;
+        mealWeeklyChart.resize();
       }
 
       // Meal Monthly View
@@ -700,7 +706,7 @@
         mealPieSummary.textContent = `Total: ${total} kcal`;
       }
       const mealPieCanvas = document.getElementById('mealPieChart');
-      if (mealPieCanvas && typeof Chart !== 'undefined') {
+      if (mealPieCanvas && typeof Chart !== 'undefined' && document.getElementById('mealPieView').style.display !== 'none') {
         if (mealPieChart) mealPieChart.destroy();
         console.log('Initializing meal pie chart:', mealCalories);
         mealPieChart = new Chart(mealPieCanvas, {
@@ -733,6 +739,8 @@
             animation: { duration: 600, easing: 'easeOutQuart' }
           }
         });
+        mealPieCanvas.width = mealPieCanvas.parentElement.clientWidth;
+        mealPieChart.resize();
       }
 
       // Meal Table
@@ -750,7 +758,7 @@
         combinedSummary.textContent = `Quemadas: ${totalBurned} kcal | Consumidas: ${totalConsumed} kcal | Balance: ${(totalBurned - totalConsumed).toFixed(0)} kcal`;
       }
       const combinedCanvas = document.getElementById('combinedChart');
-      if (combinedCanvas && typeof Chart !== 'undefined') {
+      if (combinedCanvas && typeof Chart !== 'undefined' && document.getElementById('combinedView').style.display !== 'none') {
         if (combinedChart) combinedChart.destroy();
         console.log('Initializing combined chart:', combinedCalories);
         combinedChart = new Chart(combinedCanvas, {
@@ -782,6 +790,8 @@
             animation: { duration: 600, easing: 'easeOutQuart' }
           }
         });
+        combinedCanvas.width = combinedCanvas.parentElement.clientWidth;
+        combinedChart.resize();
       }
     }
 
@@ -950,8 +960,12 @@
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
         const activeTab = document.querySelector(`.tab[onclick="showSection('${section}')"]`);
         if (activeTab) activeTab.classList.add('active');
-        if (section === 'routines') loadCalendar();
-        else updateViews();
+        if (section === 'routines') {
+          loadCalendar();
+          showView('routineWeekly'); // Ensure default view is set
+        } else {
+          showView('mealWeekly'); // Ensure default view is set
+        }
       } else {
         console.error('Error: routinesSection or mealsSection not found');
       }
@@ -969,7 +983,8 @@
         'mealPieView',
         'mealTableView'
       ];
-      
+
+      // Toggle visibility of views
       views.forEach(v => {
         const element = document.getElementById(v);
         if (element) {
@@ -990,8 +1005,17 @@
         console.error(`Tab for view ${view} not found`);
       }
 
-      // Force update of views to ensure data is refreshed
-      updateViews();
+      // Force chart updates with a slight delay to ensure DOM is rendered
+      setTimeout(() => {
+        console.log('Updating charts for view:', view);
+        updateViews();
+        // Resize all charts to ensure proper rendering
+        if (routineWeeklyChart) routineWeeklyChart.resize();
+        if (routinePieChart) routinePieChart.resize();
+        if (mealWeeklyChart) mealWeeklyChart.resize();
+        if (mealPieChart) mealPieChart.resize();
+        if (combinedChart) combinedChart.resize();
+      }, 100);
     }
 
     document.getElementById('routineSelect').onchange = () => {
@@ -1039,6 +1063,7 @@
       window.addEventListener('resize', updateDebugInfo);
       loadCalendar();
       setInterval(updateReminder, 60000);
+      showView('routineWeekly'); // Set default view on load
     };
   </script>
 </body>
