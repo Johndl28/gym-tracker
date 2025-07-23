@@ -1,56 +1,113 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 const cors = require('cors');
-const path = require('path');
 const app = express();
-
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('Conectado a MongoDB Atlas')).catch(err => console.error('Error MongoDB:', err));
+const uri = 'mongodb+srv://<user>:<password>@cluster0.mongodb.net/calorieTracker?retryWrites=true&w=majority'; // Reemplaza con tu URI
+const client = new MongoClient(uri);
 
-const routineSchema = new mongoose.Schema({
-  date: String,
-  routine: String,
-  details: String,
-  caloriesBurned: Number, // Nuevo campo para calorías quemadas
-  completed: Boolean,
+async function connectDB() {
+  try {
+    await client.connect();
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+}
+
+// Routines
+app.get('/api/routines', async (req, res) => {
+  try {
+    const db = client.db('calorieTracker');
+    const routines = await db.collection('routines').find().toArray();
+    res.json(routines);
+  } catch (error) {
+    console.error('Error fetching routines:', error);
+    res.status(500).json({ error: 'Error al obtener rutinas' });
+  }
 });
-const Routine = mongoose.model('Routine', routineSchema);
 
 app.post('/api/routines', async (req, res) => {
   try {
-    const { date, routine, details, caloriesBurned, completed } = req.body;
-    if (!date || !routine) {
-      return res.status(400).json({ error: 'Faltan datos' });
-    }
-    await Routine.findOneAndUpdate(
-      { date },
-      { date, routine, details, caloriesBurned, completed },
-      { upsert: true, new: true }
+    const db = client.db('calorieTracker');
+    const routine = req.body;
+    routine.date = normalizeDate(routine.date);
+    await db.collection('routines').updateOne(
+      { date: routine.date },
+      { $set: routine },
+      { upsert: true }
     );
-    res.status(201).json({ message: 'Rutina guardada' });
+    res.status(200).json({ message: 'Rutina guardada' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al guardar' });
+    console.error('Error saving routine:', error);
+    res.status(500).json({ error: 'Error al guardar rutina' });
   }
 });
 
-app.get('/api/routines', async (req, res) => {
+app.delete('/api/routines/:date', async (req, res) => {
   try {
-    const routines = await Routine.find();
-    res.json(routines);
+    const db = client.db('calorieTracker');
+    const date = normalizeDate(decodeURIComponent(req.params.date));
+    const result = await db.collection('routines').deleteOne({ date });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Rutina no encontrada' });
+    }
+    res.status(200).json({ message: 'Rutina eliminada' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener datos' });
+    console.error('Error deleting routine:', error);
+    res.status(500).json({ error: 'Error al eliminar rutina' });
   }
 });
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Meals
+app.get('/api/meals', async (req, res) => {
+  try {
+    const db = client.db('calorieTracker');
+    const meals = await db.collection('calories').find().toArray();
+    res.json(meals);
+  } catch (error) {
+    console.error('Error fetching meals:', error);
+    res.status(500).json({ error: 'Error al obtener comidas' });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+app.post('/api/meals', async (req, res) => {
+  try {
+    const db = client.db('calorieTracker');
+    const meal = req.body;
+    meal.date = normalizeDate(meal.date);
+    await db.collection('calories').insertOne(meal);
+    res.status(200).json({ message: 'Comida guardada' });
+  } catch (error) {
+    console.error('Error saving meal:', error);
+    res.status(500).json({ error: 'Error al guardar comida' });
+  }
+});
+
+app.delete('/api/meals/:date/:meal', async (req, res) => {
+  try {
+    const db = client.db('calorieTracker');
+    const date = normalizeDate(decodeURIComponent(req.params.date));
+    const meal = decodeURIComponent(req.params.meal);
+    const result = await db.collection('calories').deleteOne({ date, meal });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Comida no encontrada' });
+    }
+    res.status(200).json({ message: 'Comida eliminada' });
+  } catch (error) {
+    console.error('Error deleting meal:', error);
+    res.status(500).json({ error: 'Error al eliminar comida' });
+  }
+});
+
+function normalizeDate(dateStr) {
+  const [day, month, year] = dateStr.split('/');
+  return `${parseInt(day).toString().padStart(2, '0')}/${parseInt(month).toString().padStart(2, '0')}/${year}`;
+}
+
+connectDB().then(() => {
+  app.listen(3000, () => console.log('Server running on port 3000'));
+});
