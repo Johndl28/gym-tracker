@@ -31,6 +31,8 @@
   @media (min-width: 640px) { .tab { padding: 0.5rem 1.25rem; font-size: 0.875rem; } }
   .input-field { width: 100%; padding: 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
   .input-field.meal-input { border-color: #14b8a6; }
+  #routineDetailsInput { font-size: 1.125rem; }
+  @media (min-width: 640px) { #routineDetailsInput { font-size: 1.25rem; } }
   .input-field:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
   .input-field.meal-input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.3); }
   .input-field:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
@@ -196,6 +198,16 @@
       <!-- Meals Section -->
       <div id="mealsSection" class="mb-4" style="display: none;">
         <div class="mb-4">
+          <h2 class="meal-header"><span class="emoji">📅</span> Calendario de Comidas</h2>
+          <div class="flex justify-between mb-4">
+            <button id="prevMealMonth" class="btn-meal"><span class="emoji">⬅️</span> Mes Anterior</button>
+            <h3 id="currentMealMonth" class="text-xl font-semibold text-gray-800"></h3>
+            <button id="nextMealMonth" class="btn-meal">Mes Siguiente <span class="emoji">➡️</span></button>
+          </div>
+          <div id="mealCalendar" class="calendar-grid mb-4"></div>
+        </div>
+
+        <div class="mb-4">
           <h2 class="meal-header"><span class="emoji">⏰</span> Recordatorio</h2>
           <input type="time" id="startTime" class="input-field meal-input" />
           <p id="reminder" class="tips meal-tips mt-2 text-gray-600">Configura un recordatorio para tus comidas. 📅</p>
@@ -297,7 +309,9 @@
   };
 
   let currentDate = new Date();
+  let currentMealDate = new Date();
   let selectedDay = null;
+  let selectedMealDay = null;
   let routineWeeklyChart, routinePieChart, mealWeeklyChart, mealMonthlyChart, mealPieChart, combinedChart;
 
   function updateDebugInfo() {
@@ -362,10 +376,55 @@
     updateViews('routineWeeklyView');
   }
 
+  async function loadMealCalendar() {
+    console.log('Loading meal calendar...');
+    const monthYear = currentMealDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    document.getElementById('currentMealMonth').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+    const calendar = document.getElementById('mealCalendar');
+    calendar.innerHTML = '<div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>';
+
+    const firstDay = new Date(currentMealDate.getFullYear(), currentMealDate.getMonth(), 1).getDay();
+    const daysInMonth = new Date(currentMealDate.getFullYear(), currentMealDate.getMonth() + 1, 0).getDate();
+    let meals = [];
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/meals`, { method: 'GET' });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al obtener comidas: ${response.status} ${errorData.error || response.statusText}`);
+      }
+      meals = await response.json();
+      meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
+      console.log('Retrieved meals from MongoDB:', meals);
+    } catch (error) {
+      console.error('Error fetching meals:', error.message);
+      document.getElementById('mealError').textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
+      document.getElementById('mealError').style.display = 'block';
+      return;
+    }
+
+    for (let i = 0; i < firstDay; i++) {
+      calendar.innerHTML += '<div></div>';
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = normalizeDate(`${day}/${currentMealDate.getMonth() + 1}/${currentMealDate.getFullYear()}`);
+      const dayMeals = meals.filter(m => m.date === date);
+      const div = document.createElement('div');
+      div.className = `calendar-day ${dayMeals.length > 0 ? 'completed' : ''} ${selectedMealDay === date ? 'selected' : ''}`;
+      div.textContent = day;
+      if (dayMeals.length > 0) {
+        div.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.2l-3.5-3.5a1 1 0 00-1.4 1.4l4.2 4.2a1 1 0 001.4 0l8-8a1 1 0 00-1.4-1.4L9 16.2z"/></svg>`;
+      }
+      div.onclick = () => selectMealDay(date, dayMeals);
+      calendar.appendChild(div);
+    }
+  }
+
   function selectDay(date, routine) {
     selectedDay = normalizeDate(date);
-    document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
-    const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
+    document.querySelectorAll('#calendar .calendar-day').forEach(div => div.classList.remove('selected'));
+    const dayDiv = Array.from(document.querySelectorAll('#calendar .calendar-day')).find(div => div.textContent == date.split('/')[0]);
     if (dayDiv) dayDiv.classList.add('selected');
 
     const routineDetails = document.getElementById('routineDetails');
@@ -380,6 +439,14 @@
     document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : routine ? routineDetailsMap[routine.routine] || '' : '';
     document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
     document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
+  }
+
+  function selectMealDay(date, meals) {
+    selectedMealDay = normalizeDate(date);
+    document.querySelectorAll('#mealCalendar .calendar-day').forEach(div => div.classList.remove('selected'));
+    const dayDiv = Array.from(document.querySelectorAll('#mealCalendar .calendar-day')).find(div => div.textContent == date.split('/')[0]);
+    if (dayDiv) dayDiv.classList.add('selected');
+    console.log('Selected meal day:', selectedMealDay, 'Meals:', meals);
   }
 
   async function saveRoutine() {
@@ -451,39 +518,44 @@
 
   async function saveMeal() {
     console.log('Saving meal...');
+    if (!selectedMealDay) {
+        document.getElementById('mealError').textContent = 'Selecciona un día 📅';
+        document.getElementById('mealError').style.display = 'block';
+        return;
+    }
     const meal = document.getElementById('mealSelect').value;
     const calories = parseInt(document.getElementById('mealCaloriesInput').value) || 0;
-    const today = normalizeDate(new Date().toLocaleDateString('es-AR'));
     if (!meal || calories <= 0) {
-      document.getElementById('mealError').textContent = 'Elige una comida y calorías válidas ⚠️';
-      document.getElementById('mealError').style.display = 'block';
-      return;
+        document.getElementById('mealError').textContent = 'Elige una comida y calorías válidas ⚠️';
+        document.getElementById('mealError').style.display = 'block';
+        return;
     }
 
     try {
-      const mealData = { date: today, meal, calories };
-      console.log('Sending meal data:', mealData);
-      const response = await fetch(`${API_BASE_URL}/meals`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mealData)
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Error al guardar comida: ${response.status} ${errorData.error || response.statusText}`);
-      }
-      console.log('Saved meal to MongoDB:', mealData);
-      alert('¡Comida registrada! 🎉');
-      document.getElementById('mealSelect').value = '';
-      document.getElementById('mealCaloriesInput').value = '';
-      document.getElementById('mealError').style.display = 'none';
-      updateViews('mealWeeklyView');
+        const mealData = { date: selectedMealDay, meal, calories };
+        console.log('Sending meal data:', mealData);
+        const response = await fetch(`${API_BASE_URL}/meals`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mealData)
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Error al guardar comida: ${response.status} ${errorData.error || response.statusText}`);
+        }
+        console.log('Saved meal to MongoDB:', mealData);
+        alert('¡Comida registrada! 🎉');
+        document.getElementById('mealSelect').value = '';
+        document.getElementById('mealCaloriesInput').value = '';
+        document.getElementById('mealError').style.display = 'none';
+        updateViews('mealWeeklyView');
+        loadMealCalendar();
     } catch (error) {
-      console.error('Error saving meal:', error.message);
-      document.getElementById('mealError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
-      document.getElementById('mealError').style.display = 'block';
+        console.error('Error saving meal:', error.message);
+        document.getElementById('mealError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
+        document.getElementById('mealError').style.display = 'block';
     }
-  }
+}
 
   async function deleteMeal(date, meal) {
     date = normalizeDate(date);
@@ -505,6 +577,7 @@
       alert('¡Comida eliminada! 🗑️');
       document.getElementById('mealError').style.display = 'none';
       updateViews('mealWeeklyView');
+      loadMealCalendar();
     } catch (error) {
       console.error('Error deleting meal:', error.message);
       document.getElementById('mealError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
@@ -542,7 +615,6 @@
     const mealError = document.getElementById('mealError');
     let routines = [], meals = [];
 
-    // Reset error messages
     ['routineWeeklyError', 'routinePieError', 'combinedError', 'mealWeeklyError', 'mealMonthlyError', 'mealPieError'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
@@ -551,7 +623,6 @@
       }
     });
 
-    // Fetch data
     try {
       const [routinesResponse, mealsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/routines`, { method: 'GET' }),
@@ -563,7 +634,7 @@
       }
       if (!mealsResponse.ok) {
         const errorData = await mealsResponse.json().catch(() => ({}));
-        throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || mealsResponse.statusText}`);
+        throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || response.statusText}`);
       }
       routines = await routinesResponse.json();
       meals = await mealsResponse.json();
@@ -578,7 +649,6 @@
       return;
     }
 
-    // Helper function to initialize chart
     function initChart(canvasId, config, chartVar) {
       const canvas = document.getElementById(canvasId);
       if (!canvas || !window.Chart) {
@@ -590,7 +660,6 @@
         }
         return null;
       }
-      // Reset canvas attributes
       canvas.removeAttribute('width');
       canvas.removeAttribute('height');
       canvas.style.width = '100%';
@@ -603,7 +672,6 @@
       return newChart;
     }
 
-    // Routine Weekly Chart
     if (currentView === 'routineWeeklyView') {
       const weekDates = getWeekDates();
       console.log('Week dates for routineWeekly:', weekDates);
@@ -645,7 +713,6 @@
       }, routineWeeklyChart);
     }
 
-    // Routine Pie Chart
     if (currentView === 'routinePieView') {
       const routineCounts = routines.reduce((acc, r) => {
         if (r.completed && r.routine) {
@@ -681,12 +748,10 @@
       }, routinePieChart);
     }
 
-    // Routine Table View
     if (currentView === 'routineTableView') {
       updateRoutineTable(routines);
     }
 
-    // Meal Weekly Chart
     if (currentView === 'mealWeeklyView') {
       const weekDates = getWeekDates();
       console.log('Week dates for mealWeekly:', weekDates);
@@ -728,7 +793,6 @@
       }, mealWeeklyChart);
     }
 
-    // Meal Monthly Chart
     if (currentView === 'mealMonthlyView') {
       const monthDates = getMonthDates();
       console.log('Month dates for mealMonthly:', monthDates);
@@ -770,7 +834,6 @@
       }, mealMonthlyChart);
     }
 
-    // Meal Pie Chart
     if (currentView === 'mealPieView') {
       const mealCounts = meals.reduce((acc, m) => {
         if (m.meal && m.calories) {
@@ -806,12 +869,10 @@
       }, mealPieChart);
     }
 
-    // Meal Table View
     if (currentView === 'mealTableView') {
       updateMealTable(meals);
     }
 
-    // Combined Chart
     if (currentView === 'combinedView') {
       const weekDates = getWeekDates();
       console.log('Week dates for combined:', weekDates);
@@ -1036,6 +1097,7 @@
         loadCalendar();
         showView('routineWeeklyView');
       } else {
+        loadMealCalendar();
         showView('mealWeeklyView');
       }
     } else {
@@ -1046,7 +1108,6 @@
   function showView(view) {
     console.log('Switching to view:', view);
 
-    // List of all possible views
     const views = [
       'routineWeeklyView',
       'routinePieView',
@@ -1058,20 +1119,17 @@
       'mealTableView'
     ];
 
-    // Validate view parameter
     if (!views.includes(view)) {
       console.error(`Invalid view: ${view}. Available views: ${views.join(', ')}`);
       return;
     }
 
-    // Ensure only the active view is visible
     views.forEach(v => {
       const element = document.getElementById(v);
       if (element) {
         const shouldBeVisible = v === view;
         element.style.display = shouldBeVisible ? 'block' : 'none';
         console.log(`Setting ${v} display to: ${element.style.display} (expected: ${shouldBeVisible ? 'block' : 'none'})`);
-        // Force canvas visibility
         if (shouldBeVisible) {
           const canvas = element.querySelector('canvas');
           if (canvas) {
@@ -1086,7 +1144,6 @@
       }
     });
 
-    // Update active tab
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     const activeTab = document.querySelector(`.tab[onclick="showView('${view}')"]`);
     if (activeTab) {
@@ -1096,7 +1153,6 @@
       console.error(`Tab for view ${view} not found`);
     }
 
-    // Force chart update after DOM is rendered
     requestAnimationFrame(() => {
       console.log('Triggering updateViews for:', view);
       updateViews(view);
@@ -1115,6 +1171,14 @@
   document.getElementById('nextMonth').onclick = () => {
     currentDate.setMonth(currentDate.getMonth() + 1);
     loadCalendar();
+  };
+  document.getElementById('prevMealMonth').onclick = () => {
+    currentMealDate.setMonth(currentMealDate.getMonth() - 1);
+    loadMealCalendar();
+  };
+  document.getElementById('nextMealMonth').onclick = () => {
+    currentMealDate.setMonth(currentMealDate.getMonth() + 1);
+    loadMealCalendar();
   };
   document.getElementById('saveRoutine').onclick = saveRoutine;
   document.getElementById('routineFromMonth').onchange = () => updateViews('routineTableView');
@@ -1147,6 +1211,7 @@
     updateDebugInfo();
     window.addEventListener('resize', updateDebugInfo);
     loadCalendar();
+    loadMealCalendar();
     setInterval(updateReminder, 60000);
     showView('routineWeeklyView');
   };
