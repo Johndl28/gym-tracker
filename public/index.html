@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,7 +14,7 @@
     @media (min-width: 640px) { .container { max-width: 640px; padding: 1rem; } }
     @media (min-width: 768px) { .container { max-width: 768px; } }
     @media (min-width: 1024px) { .container { max-width: 896px; } }
-    .card { background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 0.75rem; margin-bottom: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card { background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 0.75rem; margin-bottom: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; overflow: visible; }
     .card:hover { transform: translateY(-0.25rem); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
     .btn-primary, .btn-delete { background: linear-gradient(to right, #991b1b, #1f2937); color: white; font-weight: 600; border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.3s ease, transform 0.2s ease; }
     .btn-meal { background: linear-gradient(to right, #0d9488, #2563eb); }
@@ -55,7 +54,7 @@
     .tips { background: linear-gradient(to right, #fee2e2, #fecaca); padding: 0.75rem; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     .tips.meal-tips { background: linear-gradient(to right, #e6f3fa, #a3e4d7); }
     @media (min-width: 640px) { .tips { padding: 1rem; } }
-    canvas { max-width: 300px; width: 100%; margin: 0 auto; }
+    canvas { display: block !important; min-height: 200px; width: 100% !important; max-width: 540px; margin: 0 auto; }
     @media (min-width: 640px) { canvas { max-width: 390px; } }
     @media (min-width: 768px) { canvas { max-width: 450px; } }
     @media (min-width: 1024px) { canvas { max-width: 540px; } }
@@ -73,7 +72,7 @@
     .emoji { font-size: 0.875rem; }
     @media (min-width: 640px) { .emoji { font-size: 1rem; } }
     @media (min-width: 768px) { .emoji { font-size: 1.125rem; } }
-    .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
+    .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font: 0.75rem; border-radius: 0.25rem; }
     .btn-delete { padding: 0.5rem; font-size: 0.75rem; }
     @media (min-width: 640px) { .btn-delete { padding: 0.75rem; font-size: 0.875rem; } }
   </style>
@@ -229,6 +228,7 @@
           </div>
           <div id="mealMonthlyView" class="card" style="display: none;">
             <h2 class="meal-header"><span class="emoji">🗓️</span> Mensual</h2>
+            <canvas id="mealMonthlyChart"></canvas>
             <p id="mealMonthlySummary" class="summary"></p>
           </div>
           <div id="mealPieView" class="card" style="display: none;">
@@ -287,7 +287,7 @@
 
     let currentDate = new Date();
     let selectedDay = null;
-    let routineWeeklyChart, routinePieChart, mealWeeklyChart, mealPieChart, combinedChart;
+    let routineWeeklyChart, routinePieChart, mealWeeklyChart, mealMonthlyChart, mealPieChart, combinedChart;
 
     function updateDebugInfo() {
       const debugInfo = document.getElementById('debugInfo');
@@ -525,8 +525,8 @@
       return days;
     }
 
-    async function updateViews() {
-      console.log('Updating views...');
+    async function updateViews(currentView) {
+      console.log('Updating views for:', currentView);
       const routineError = document.getElementById('routineError');
       const mealError = document.getElementById('mealError');
       let routines = [], meals = [];
@@ -542,7 +542,7 @@
         }
         if (!mealsResponse.ok) {
           const errorData = await mealsResponse.json().catch(() => ({}));
-          throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || response.statusText}`);
+          throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || mealsResponse.statusText}`);
         }
         routines = await routinesResponse.json();
         meals = await mealsResponse.json();
@@ -558,240 +558,97 @@
       }
 
       // Routine Weekly Chart
-      const weekDates = getWeekDates();
-      const routineWeeklyCalories = weekDates.map(date => {
-        const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
-        return dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
-      });
-      const routineWeeklySummary = document.getElementById('routineWeeklySummary');
-      if (routineWeeklySummary) {
-        const total = routineWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
-        routineWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
-      }
-      const routineWeeklyCanvas = document.getElementById('routineWeeklyChart');
-      if (routineWeeklyCanvas && typeof Chart !== 'undefined' && document.getElementById('routineWeeklyView').style.display !== 'none') {
-        if (routineWeeklyChart) routineWeeklyChart.destroy();
-        console.log('Initializing routine weekly chart:', routineWeeklyCalories);
-        routineWeeklyChart = new Chart(routineWeeklyCanvas, {
-          type: 'bar',
-          data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            datasets: [{
-              label: 'Calorías Quemadas',
-              data: routineWeeklyCalories,
-              backgroundColor: '#ef4444',
-              borderColor: '#b91c1c',
-              borderWidth: 1,
-              borderRadius: 4
-            }]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
-            plugins: { legend: { display: false } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
+      if (currentView === 'routineWeeklyView') {
+        const weekDates = getWeekDates();
+        console.log('Week dates:', weekDates);
+        const routineWeeklyCalories = weekDates.map(date => {
+          const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
+          const total = dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
+          console.log(`Calories for ${date}: ${total}`);
+          return total;
         });
-        routineWeeklyCanvas.width = routineWeeklyCanvas.parentElement.clientWidth;
-        routineWeeklyChart.resize();
-      }
-
-      // Routine Pie Chart
-      const routineTypes = Object.keys(routineDetailsMap);
-      const routineCounts = routineTypes.map(routine => routines.filter(r => r.routine === routine && r.completed).length);
-      const routinePieSummary = document.getElementById('routinePieSummary');
-      if (routinePieSummary) {
-        const total = routineCounts.reduce((sum, count) => sum + count, 0);
-        routinePieSummary.textContent = `Total de rutinas completadas: ${total}`;
-      }
-      const routinePieCanvas = document.getElementById('routinePieChart');
-      if (routinePieCanvas && typeof Chart !== 'undefined' && document.getElementById('routinePieView').style.display !== 'none') {
-        if (routinePieChart) routinePieChart.destroy();
-        console.log('Initializing routine pie chart:', routineCounts);
-        routinePieChart = new Chart(routinePieCanvas, {
-          type: 'pie',
-          data: {
-            labels: routineTypes.map(r => r + (r.includes('Cardio') ? ' 🏃‍♂️' : r.includes('Superior') ? ' 💪' : ' 🦵')),
-            datasets: [{
-              label: 'Rutinas Completadas',
-              data: routineCounts,
-              backgroundColor: ['#f87171', '#ef4444', '#dc2626', '#b91c1c'],
-              borderColor: '#ffffff',
-              borderWidth: 1,
-              hoverOffset: 12
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 14 } } },
-              tooltip: {
-                callbacks: {
-                  label: context => {
-                    const value = context.raw || 0;
-                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                    return `${context.label}: ${value} (${percentage}%)`;
-                  }
-                }
-              }
-            },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        });
-        routinePieCanvas.width = routinePieCanvas.parentElement.clientWidth;
-        routinePieChart.resize();
-      }
-
-      // Routine Table
-      updateRoutineTable(routines);
-
-      // Meal Weekly Chart
-      const mealWeeklyCalories = weekDates.map(date => {
-        const dayMeals = meals.filter(m => m.date === date && m.calories);
-        return dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-      });
-      const mealWeeklySummary = document.getElementById('mealWeeklySummary');
-      if (mealWeeklySummary) {
-        const total = mealWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
-        mealWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
-      }
-      const mealWeeklyCanvas = document.getElementById('mealWeeklyChart');
-      if (mealWeeklyCanvas && typeof Chart !== 'undefined' && document.getElementById('mealWeeklyView').style.display !== 'none') {
-        if (mealWeeklyChart) mealWeeklyChart.destroy();
-        console.log('Initializing meal weekly chart:', mealWeeklyCalories);
-        mealWeeklyChart = new Chart(mealWeeklyCanvas, {
-          type: 'bar',
-          data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            datasets: [{
-              label: 'Calorías Consumidas',
-              data: mealWeeklyCalories,
-              backgroundColor: '#4fd1c5',
-              borderColor: '#2c7a7b',
-              borderWidth: 1,
-              borderRadius: 4
-            }]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
-            plugins: { legend: { display: false } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        });
-        mealWeeklyCanvas.width = mealWeeklyCanvas.parentElement.clientWidth;
-        mealWeeklyChart.resize();
-      }
-
-      // Meal Monthly View
-      const monthDates = getMonthDates();
-      const monthlyCalories = monthDates.map(date => {
-        const dayMeals = meals.filter(m => m.date === date && m.calories);
-        return dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-      });
-      const mealMonthlySummary = document.getElementById('mealMonthlySummary');
-      if (mealMonthlySummary) {
-        const total = monthlyCalories.reduce((sum, cal) => sum + cal, 0);
-        mealMonthlySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / monthDates.length).toFixed(0)} kcal/día)`;
-      }
-
-      // Meal Pie Chart
-      const mealTypes = ['breakfast', 'morningSnack', 'lunch', 'afternoonSnack', 'dinner', 'optional'];
-      const mealLabels = ['Desayuno ☕', 'Merienda Mañana 🥐', 'Almuerzo 🍲', 'Merienda Tarde 🥪', 'Cena 🍴', 'Antojo 🍫'];
-      const mealCalories = mealTypes.map(meal => {
-        const mealData = meals.filter(m => m.meal === meal && m.calories);
-        return mealData.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-      });
-      const mealPieSummary = document.getElementById('mealPieSummary');
-      if (mealPieSummary) {
-        const total = mealCalories.reduce((sum, cal) => sum + cal, 0);
-        mealPieSummary.textContent = `Total: ${total} kcal`;
-      }
-      const mealPieCanvas = document.getElementById('mealPieChart');
-      if (mealPieCanvas && typeof Chart !== 'undefined' && document.getElementById('mealPieView').style.display !== 'none') {
-        if (mealPieChart) mealPieChart.destroy();
-        console.log('Initializing meal pie chart:', mealCalories);
-        mealPieChart = new Chart(mealPieCanvas, {
-          type: 'pie',
-          data: {
-            labels: mealLabels,
-            datasets: [{
-              label: 'Calorías Consumidas',
-              data: mealCalories,
-              backgroundColor: ['#f87171', '#4fd1c5', '#fcd34d', '#68d391', '#a78bfa', '#fb923c'],
-              borderColor: '#ffffff',
-              borderWidth: 1,
-              hoverOffset: 12
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 14 } } },
-              tooltip: {
-                callbacks: {
-                  label: context => {
-                    const value = context.raw || 0;
-                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                    return `${context.label}: ${value} kcal (${percentage}%)`;
-                  }
-                }
-              }
-            },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        });
-        mealPieCanvas.width = mealPieCanvas.parentElement.clientWidth;
-        mealPieChart.resize();
-      }
-
-      // Meal Table
-      updateMealTable(meals);
-
-      // Combined Chart
-      const combinedCalories = weekDates.map(date => ({
-        burned: routines.filter(r => r.date === date && r.completed && r.caloriesBurned).reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0),
-        consumed: meals.filter(m => m.date === date && m.calories).reduce((sum, m) => sum + (Number(m.calories) || 0), 0)
-      }));
-      const combinedSummary = document.getElementById('combinedSummary');
-      if (combinedSummary) {
-        const totalBurned = combinedCalories.reduce((sum, c) => sum + c.burned, 0);
-        const totalConsumed = combinedCalories.reduce((sum, c) => sum + c.consumed, 0);
-        combinedSummary.textContent = `Quemadas: ${totalBurned} kcal | Consumidas: ${totalConsumed} kcal | Balance: ${(totalBurned - totalConsumed).toFixed(0)} kcal`;
-      }
-      const combinedCanvas = document.getElementById('combinedChart');
-      if (combinedCanvas && typeof Chart !== 'undefined' && document.getElementById('combinedView').style.display !== 'none') {
-        if (combinedChart) combinedChart.destroy();
-        console.log('Initializing combined chart:', combinedCalories);
-        combinedChart = new Chart(combinedCanvas, {
-          type: 'bar',
-          data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            datasets: [
-              {
+        const routineWeeklySummary = document.getElementById('routineWeeklySummary');
+        if (routineWeeklySummary) {
+          const total = routineWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
+          routineWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
+          console.log('Routine weekly summary:', routineWeeklySummary.textContent);
+        }
+        const routineWeeklyCanvas = document.getElementById('routineWeeklyChart');
+        if (routineWeeklyCanvas && typeof Chart !== 'undefined') {
+          if (routineWeeklyChart) routineWeeklyChart.destroy();
+          console.log('Initializing routine weekly chart with data:', routineWeeklyCalories);
+          routineWeeklyChart = new Chart(routineWeeklyCanvas, {
+            type: 'bar',
+            data: {
+              labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+              datasets: [{
                 label: 'Calorías Quemadas',
-                data: combinedCalories.map(c => c.burned),
+                data: routineWeeklyCalories,
                 backgroundColor: '#ef4444',
                 borderColor: '#b91c1c',
                 borderWidth: 1,
                 borderRadius: 4
-              },
-              {
+              }]
+            },
+            options: {
+              scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
+              plugins: { legend: { display: false } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+          routineWeeklyCanvas.width = routineWeeklyCanvas.parentElement.clientWidth;
+          routineWeeklyChart.resize();
+          console.log('Routine weekly chart initialized');
+        } else {
+          console.error('Chart.js not loaded or routineWeeklyChart canvas not found');
+        }
+      }
+
+      // Meal Weekly Chart
+      if (currentView === 'mealWeeklyView') {
+        const weekDates = getWeekDates();
+        console.log('Week dates:', weekDates);
+        const mealWeeklyCalories = weekDates.map(date => {
+          const dayMeals = meals.filter(m => m.date === date && m.calories);
+          const total = dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+          console.log(`Calories for ${date}: ${total}`);
+          return total;
+        });
+        const mealWeeklySummary = document.getElementById('mealWeeklySummary');
+        if (mealWeeklySummary) {
+          const total = mealWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
+          mealWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
+          console.log('Meal weekly summary:', mealWeeklySummary.textContent);
+        }
+        const mealWeeklyCanvas = document.getElementById('mealWeeklyChart');
+        if (mealWeeklyCanvas && typeof Chart !== 'undefined') {
+          if (mealWeeklyChart) mealWeeklyChart.destroy();
+          console.log('Initializing meal weekly chart with data:', mealWeeklyCalories);
+          mealWeeklyChart = new Chart(mealWeeklyCanvas, {
+            type: 'bar',
+            data: {
+              labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+              datasets: [{
                 label: 'Calorías Consumidas',
-                data: combinedCalories.map(c => c.consumed),
+                data: mealWeeklyCalories,
                 backgroundColor: '#4fd1c5',
                 borderColor: '#2c7a7b',
                 borderWidth: 1,
                 borderRadius: 4
-              }
-            ]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
-            plugins: { legend: { position: 'bottom' } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        });
-        combinedCanvas.width = combinedCanvas.parentElement.clientWidth;
-        combinedChart.resize();
+              }]
+            },
+            options: {
+              scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
+              plugins: { legend: { display: false } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+          mealWeeklyCanvas.width = mealWeeklyCanvas.parentElement.clientWidth;
+          mealWeeklyChart.resize();
+          console.log('Meal weekly chart initialized');
+        } else {
+          console.error('Chart.js not loaded or mealWeeklyChart canvas not found');
+        }
       }
     }
 
@@ -962,9 +819,9 @@
         if (activeTab) activeTab.classList.add('active');
         if (section === 'routines') {
           loadCalendar();
-          showView('routineWeekly'); // Ensure default view is set
+          showView('routineWeekly');
         } else {
-          showView('mealWeekly'); // Ensure default view is set
+          showView('mealWeekly');
         }
       } else {
         console.error('Error: routinesSection or mealsSection not found');
@@ -973,6 +830,8 @@
 
     function showView(view) {
       console.log('Switching to view:', view);
+
+      // List of all possible views
       const views = [
         'routineWeeklyView',
         'routinePieView',
@@ -984,12 +843,18 @@
         'mealTableView'
       ];
 
+      // Validate view parameter
+      if (!views.includes(view)) {
+        console.error(`Invalid view: ${view}. Available views: ${views.join(', ')}`);
+        return;
+      }
+
       // Toggle visibility of views
       views.forEach(v => {
         const element = document.getElementById(v);
         if (element) {
           element.style.display = v === view ? 'block' : 'none';
-          console.log(`Setting ${v} display to: ${v === view ? 'block' : 'none'}`);
+          console.log(`Setting ${v} display to: ${element.style.display}`);
         } else {
           console.error(`Element with ID ${v} not found in DOM`);
         }
@@ -1005,17 +870,21 @@
         console.error(`Tab for view ${view} not found`);
       }
 
-      // Force chart updates with a slight delay to ensure DOM is rendered
-      setTimeout(() => {
+      // Force chart update after DOM is rendered
+      requestAnimationFrame(() => {
         console.log('Updating charts for view:', view);
-        updateViews();
-        // Resize all charts to ensure proper rendering
-        if (routineWeeklyChart) routineWeeklyChart.resize();
-        if (routinePieChart) routinePieChart.resize();
-        if (mealWeeklyChart) mealWeeklyChart.resize();
-        if (mealPieChart) mealPieChart.resize();
-        if (combinedChart) combinedChart.resize();
-      }, 100);
+        updateViews(view);
+        // Force resize to ensure charts render
+        setTimeout(() => {
+          if (routineWeeklyChart) routineWeeklyChart.resize();
+          if (routinePieChart) routinePieChart.resize();
+          if (mealWeeklyChart) mealWeeklyChart.resize();
+          if (mealMonthlyChart) mealMonthlyChart.resize();
+          if (mealPieChart) mealPieChart.resize();
+          if (combinedChart) combinedChart.resize();
+          console.log('Forced chart resize for all charts');
+        }, 100);
+      });
     }
 
     document.getElementById('routineSelect').onchange = () => {
@@ -1063,7 +932,7 @@
       window.addEventListener('resize', updateDebugInfo);
       loadCalendar();
       setInterval(updateReminder, 60000);
-      showView('routineWeekly'); // Set default view on load
+      showView('routineWeekly');
     };
   </script>
 </body>
