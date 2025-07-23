@@ -72,7 +72,7 @@
     .emoji { font-size: 0.875rem; }
     @media (min-width: 640px) { .emoji { font-size: 1rem; } }
     @media (min-width: 768px) { .emoji { font-size: 1.125rem; } }
-    .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font: 0.75rem; border-radius: 0.25rem; }
+    .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
     .btn-delete { padding: 0.5rem; font-size: 0.75rem; }
     @media (min-width: 640px) { .btn-delete { padding: 0.75rem; font-size: 0.875rem; } }
   </style>
@@ -133,7 +133,7 @@
             <div class="tab active" onclick="showView('routineWeekly')">Semanal 📊</div>
             <div class="tab" onclick="showView('routinePie')">Distribución 🥧</div>
             <div class="tab" onclick="showView('routineTable')">Tabla 📋</div>
-            <div class="tab" onclick="showView('combined')">Quemadas vs Consumidas ⚖️</div>
+            <div class="tab" onclick="showView('combinedView')">Quemadas vs Consumidas ⚖️</div>
           </div>
           <div id="routineWeeklyView" class="card">
             <h2><span class="emoji">📅</span> Calorías Semanales</h2>
@@ -348,7 +348,7 @@
         calendar.appendChild(div);
       }
 
-      updateViews();
+      updateViews('routineWeekly');
     }
 
     function selectDay(date, routine) {
@@ -466,7 +466,7 @@
         document.getElementById('mealSelect').value = '';
         document.getElementById('mealCaloriesInput').value = '';
         document.getElementById('mealError').style.display = 'none';
-        updateViews();
+        updateViews('mealWeekly');
       } catch (error) {
         console.error('Error saving meal:', error.message);
         document.getElementById('mealError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
@@ -493,7 +493,7 @@
         console.log('Meal deleted from MongoDB for date:', date, 'meal:', meal);
         alert('¡Comida eliminada! 🗑️');
         document.getElementById('mealError').style.display = 'none';
-        updateViews();
+        updateViews('mealWeekly');
       } catch (error) {
         console.error('Error deleting meal:', error.message);
         document.getElementById('mealError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
@@ -526,7 +526,7 @@
     }
 
     async function updateViews(currentView) {
-      console.log('Updating views for:', currentView);
+      console.log('Updating views for:', currentView || 'routineWeekly');
       const routineError = document.getElementById('routineError');
       const mealError = document.getElementById('mealError');
       let routines = [], meals = [];
@@ -604,6 +604,55 @@
         }
       }
 
+      // Routine Pie Chart
+      if (currentView === 'routinePieView') {
+        const routineCounts = routines.reduce((acc, r) => {
+          if (r.completed && r.routine) {
+            acc[r.routine] = (acc[r.routine] || 0) + 1;
+          }
+          return acc;
+        }, {});
+        const labels = Object.keys(routineCounts);
+        const data = Object.values(routineCounts);
+        const routinePieSummary = document.getElementById('routinePieSummary');
+        if (routinePieSummary) {
+          const total = data.reduce((sum, count) => sum + count, 0);
+          routinePieSummary.textContent = `Total: ${total} rutinas completadas`;
+          console.log('Routine pie summary:', routinePieSummary.textContent);
+        }
+        const routinePieCanvas = document.getElementById('routinePieChart');
+        if (routinePieCanvas && typeof Chart !== 'undefined') {
+          if (routinePieChart) routinePieChart.destroy();
+          console.log('Initializing routine pie chart with data:', data);
+          routinePieChart = new Chart(routinePieCanvas, {
+            type: 'pie',
+            data: {
+              labels,
+              datasets: [{
+                data,
+                backgroundColor: ['#ef4444', '#f87171', '#fca5a5', '#fecaca'],
+                borderColor: ['#b91c1c', '#c53030', '#dc2626', '#7f1d1d'],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              plugins: { legend: { position: 'bottom' } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+          routinePieCanvas.width = routinePieCanvas.parentElement.clientWidth;
+          routinePieChart.resize();
+          console.log('Routine pie chart initialized');
+        } else {
+          console.error('Chart.js not loaded or routinePieChart canvas not found');
+        }
+      }
+
+      // Routine Table View
+      if (currentView === 'routineTableView') {
+        updateRoutineTable(routines);
+      }
+
       // Meal Weekly Chart
       if (currentView === 'mealWeeklyView') {
         const weekDates = getWeekDates();
@@ -648,6 +697,162 @@
           console.log('Meal weekly chart initialized');
         } else {
           console.error('Chart.js not loaded or mealWeeklyChart canvas not found');
+        }
+      }
+
+      // Meal Monthly Chart
+      if (currentView === 'mealMonthlyView') {
+        const monthDates = getMonthDates();
+        console.log('Month dates:', monthDates);
+        const monthlyCalories = monthDates.map(date => {
+          const dayMeals = meals.filter(m => m.date === date && m.calories);
+          const total = dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+          console.log(`Calories for ${date}: ${total}`);
+          return total;
+        });
+        const mealMonthlySummary = document.getElementById('mealMonthlySummary');
+        if (mealMonthlySummary) {
+          const total = monthlyCalories.reduce((sum, cal) => sum + cal, 0);
+          mealMonthlySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / monthDates.length).toFixed(0)} kcal/día)`;
+          console.log('Meal monthly summary:', mealMonthlySummary.textContent);
+        }
+        const mealMonthlyCanvas = document.getElementById('mealMonthlyChart');
+        if (mealMonthlyCanvas && typeof Chart !== 'undefined') {
+          if (mealMonthlyChart) mealMonthlyChart.destroy();
+          console.log('Initializing meal monthly chart with data:', monthlyCalories);
+          mealMonthlyChart = new Chart(mealMonthlyCanvas, {
+            type: 'bar',
+            data: {
+              labels: monthDates.map(date => date.split('/')[0]),
+              datasets: [{
+                label: 'Calorías Consumidas',
+                data: monthlyCalories,
+                backgroundColor: '#4fd1c5',
+                borderColor: '#2c7a7b',
+                borderWidth: 1,
+                borderRadius: 4
+              }]
+            },
+            options: {
+              scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días del Mes' } } },
+              plugins: { legend: { display: false } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+          mealMonthlyCanvas.width = mealMonthlyCanvas.parentElement.clientWidth;
+          mealMonthlyChart.resize();
+          console.log('Meal monthly chart initialized');
+        } else {
+          console.error('Chart.js not loaded or mealMonthlyChart canvas not found');
+        }
+      }
+
+      // Meal Pie Chart
+      if (currentView === 'mealPieView') {
+        const mealCounts = meals.reduce((acc, m) => {
+          if (m.meal && m.calories) {
+            acc[m.meal] = (acc[m.meal] || 0) + Number(m.calories);
+          }
+          return acc;
+        }, {});
+        const labels = Object.keys(mealCounts);
+        const data = Object.values(mealCounts);
+        const mealPieSummary = document.getElementById('mealPieSummary');
+        if (mealPieSummary) {
+          const total = data.reduce((sum, cal) => sum + cal, 0);
+          mealPieSummary.textContent = `Total: ${total} kcal`;
+          console.log('Meal pie summary:', mealPieSummary.textContent);
+        }
+        const mealPieCanvas = document.getElementById('mealPieChart');
+        if (mealPieCanvas && typeof Chart !== 'undefined') {
+          if (mealPieChart) mealPieChart.destroy();
+          console.log('Initializing meal pie chart with data:', data);
+          mealPieChart = new Chart(mealPieCanvas, {
+            type: 'pie',
+            data: {
+              labels,
+              datasets: [{
+                data,
+                backgroundColor: ['#4fd1c5', '#5eead4', '#99f6e4', '#a3e4d7'],
+                borderColor: ['#2c7a7b', '#0f766e', '#14b8a6', '#115e59'],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              plugins: { legend: { position: 'bottom' } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+          mealPieCanvas.width = mealPieCanvas.parentElement.clientWidth;
+          mealPieChart.resize();
+          console.log('Meal pie chart initialized');
+        } else {
+          console.error('Chart.js not loaded or mealPieChart canvas not found');
+        }
+      }
+
+      // Meal Table View
+      if (currentView === 'mealTableView') {
+        updateMealTable(meals);
+      }
+
+      // Combined Chart
+      if (currentView === 'combinedView') {
+        const weekDates = getWeekDates();
+        console.log('Week dates:', weekDates);
+        const routineCalories = weekDates.map(date => {
+          const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
+          return dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
+        });
+        const mealCalories = weekDates.map(date => {
+          const dayMeals = meals.filter(m => m.date === date && m.calories);
+          return dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+        });
+        const combinedSummary = document.getElementById('combinedSummary');
+        if (combinedSummary) {
+          const totalRoutines = routineCalories.reduce((sum, cal) => sum + cal, 0);
+          const totalMeals = mealCalories.reduce((sum, cal) => sum + cal, 0);
+          combinedSummary.textContent = `Quemadas: ${totalRoutines} kcal | Consumidas: ${totalMeals} kcal | Balance: ${totalMeals - totalRoutines} kcal`;
+          console.log('Combined summary:', combinedSummary.textContent);
+        }
+        const combinedCanvas = document.getElementById('combinedChart');
+        if (combinedCanvas && typeof Chart !== 'undefined') {
+          if (combinedChart) combinedChart.destroy();
+          console.log('Initializing combined chart with data:', { routineCalories, mealCalories });
+          combinedChart = new Chart(combinedCanvas, {
+            type: 'bar',
+            data: {
+              labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+              datasets: [
+                {
+                  label: 'Calorías Quemadas',
+                  data: routineCalories,
+                  backgroundColor: '#ef4444',
+                  borderColor: '#b91c1c',
+                  borderWidth: 1,
+                  borderRadius: 4
+                },
+                {
+                  label: 'Calorías Consumidas',
+                  data: mealCalories,
+                  backgroundColor: '#4fd1c5',
+                  borderColor: '#2c7a7b',
+                  borderWidth: 1,
+                  borderRadius: 4
+                }
+              ]
+            },
+            options: {
+              scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
+              plugins: { legend: { position: 'bottom' } },
+              animation: { duration: 600, easing: 'easeOutQuart' }
+            }
+          });
+          combinedCanvas.width = combinedCanvas.parentElement.clientWidth;
+          combinedChart.resize();
+          console.log('Combined chart initialized');
+        } else {
+          console.error('Chart.js not loaded or combinedChart canvas not found');
         }
       }
     }
@@ -849,12 +1054,23 @@
         return;
       }
 
-      // Toggle visibility of views
+      // Ensure only the active view is visible
       views.forEach(v => {
         const element = document.getElementById(v);
         if (element) {
-          element.style.display = v === view ? 'block' : 'none';
-          console.log(`Setting ${v} display to: ${element.style.display}`);
+          const shouldBeVisible = v === view;
+          element.style.display = shouldBeVisible ? 'block' : 'none';
+          console.log(`Setting ${v} display to: ${element.style.display} (expected: ${shouldBeVisible ? 'block' : 'none'})`);
+          // Force canvas visibility
+          if (shouldBeVisible) {
+            const canvas = element.querySelector('canvas');
+            if (canvas) {
+              canvas.style.display = 'block';
+              canvas.style.width = '100%';
+              canvas.style.height = '200px';
+              console.log(`Ensured canvas visibility for ${v}:`, canvas.id);
+            }
+          }
         } else {
           console.error(`Element with ID ${v} not found in DOM`);
         }
@@ -901,12 +1117,12 @@
       loadCalendar();
     };
     document.getElementById('saveRoutine').onclick = saveRoutine;
-    document.getElementById('routineFromMonth').onchange = updateViews;
-    document.getElementById('routineToMonth').onchange = updateViews;
+    document.getElementById('routineFromMonth').onchange = () => updateViews('routineTable');
+    document.getElementById('routineToMonth').onchange = () => updateViews('routineTable');
     document.getElementById('routineExportCsv').onclick = exportRoutineCsv;
     document.getElementById('saveMeal').onclick = saveMeal;
-    document.getElementById('mealFromMonth').onchange = updateViews;
-    document.getElementById('mealToMonth').onchange = updateViews;
+    document.getElementById('mealFromMonth').onchange = () => updateViews('mealTable');
+    document.getElementById('mealToMonth').onchange = () => updateViews('mealTable');
     document.getElementById('mealExportCsv').onclick = exportMealCsv;
 
     document.getElementById('startTime')?.addEventListener('change', () => {
