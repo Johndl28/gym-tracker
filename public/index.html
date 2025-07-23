@@ -8,75 +8,75 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js?v=4.4.4"></script>
   <style id="fallback-style"></style>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); }
-    .container { max-width: 95%; margin: 0 auto; padding: 0.5rem; }
-    @media (min-width: 640px) { .container { max-width: 640px; padding: 1rem; } }
-    @media (min-width: 768px) { .container { max-width: 768px; } }
-    @media (min-width: 1024px) { .container { max-width: 896px; } }
-    .card { background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 0.75rem; margin-bottom: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; overflow: visible; }
-    .card:hover { transform: translateY(-0.25rem); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
-    .btn-primary, .btn-delete { background: linear-gradient(to right, #991b1b, #1f2937); color: white; font-weight: 600; border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.3s ease, transform 0.2s ease; }
-    .btn-meal { background: linear-gradient(to right, #0d9488, #2563eb); }
-    .btn-primary:hover, .btn-delete:hover, .btn-meal:hover { background: linear-gradient(to right, #7f1d1d, #111827); transform: scale(1.02); }
-    .btn-meal:hover { background: linear-gradient(to right, #0f766e, #1d4ed8); }
-    .btn-primary:focus, .btn-delete:focus, .btn-meal:focus { outline: none; box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
-    .btn-meal:focus { box-shadow: 0 0 0 3px rgba(20,184,166,0.4); }
-    .tab { padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; color: #1f2937; background: #fee2e2; cursor: pointer; transition: all 0.2s ease; font-size: 0.75rem; }
-    .tab.meal-tab { background: #e6f3fa; }
-    .tab:hover { background: #fecaca; }
-    .tab.meal-tab:hover { background: #d1e7f5; }
-    .tab.active { background: #ef4444; color: white; }
-    .tab.meal-tab.active { background: #0d9488; }
-    @media (min-width: 640px) { .tab { padding: 0.5rem 1.25rem; font-size: 0.875rem; } }
-    .input-field { width: 100%; padding: 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
-    .input-field.meal-input { border-color: #14b8a6; }
-    .input-field:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
-    .input-field.meal-input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.3); }
-    .input-field:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .select-wrapper { position: relative; }
-    .select-wrapper select { appearance: none; width: 100%; padding: 0.75rem 2.5rem 0.75rem 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
-    .select-wrapper.meal-select select { border-color: #14b8a6; }
-    .select-wrapper select:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
-    .select-wrapper.meal-select select:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.3); }
-    .select-wrapper select:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .select-wrapper::after { content: '▼'; position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #b91c1c; font-size: 0.875rem; pointer-events: none; }
-    .select-wrapper.meal-select::after { color: #0d9488; }
-    @media (min-width: 640px) { .input-field, .select-wrapper select { padding: 0.875rem; font-size: 1rem; } .select-wrapper select { padding-right: 2.75rem; } .select-wrapper::after { right: 1rem; font-size: 1rem; } }
-    .error { color: #dc2626; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 500; }
-    @media (min-width: 640px) { .error { font-size: 0.875rem; } }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 2px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; transition: all 0.2s ease; }
-    .calendar-day:hover { background: #fee2e2; }
-    .completed { background: #ef4444; color: white; border-color: #b91c1c; }
-    .completed svg { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; }
-    .selected { border: 2px solid #1f2937; box-shadow: 0 0 0 3px rgba(31,41,55,0.3); }
-    .tips { background: linear-gradient(to right, #fee2e2, #fecaca); padding: 0.75rem; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .tips.meal-tips { background: linear-gradient(to right, #e6f3fa, #a3e4d7); }
-    @media (min-width: 640px) { .tips { padding: 1rem; } }
-    canvas { display: block !important; min-height: 200px; width: 100% !important; max-width: 540px; margin: 0 auto; }
-    @media (min-width: 640px) { canvas { max-width: 390px; } }
-    @media (min-width: 768px) { canvas { max-width: 450px; } }
-    @media (min-width: 1024px) { canvas { max-width: 540px; } }
-    h1 { font-size: 1.5rem; font-weight: 800; color: #7f1d1d; text-align: center; margin-bottom: 0.75rem; transition: transform 0.3s ease; }
-    h1:hover { transform: scale(1.05); }
-    @media (min-width: 640px) { h1 { font-size: 1.75rem; } }
-    @media (min-width: 768px) { h1 { font-size: 2rem; } }
-    @media (min-width: 1024px) { h1 { font-size: 2.5rem; } }
-    h2 { font-size: 1rem; font-weight: 700; color: #b91c1c; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
-    h2.meal-header { color: #0d9488; }
-    @media (min-width: 640px) { h2 { font-size: 1.25rem; } }
-    @media (min-width: 768px) { h2 { font-size: 1.5rem; } }
-    .summary { color: #1f2937; font-size: 0.75rem; margin-top: 0.5rem; text-align: center; }
-    @media (min-width: 640px) { .summary { font-size: 0.875rem; } }
-    .emoji { font-size: 0.875rem; }
-    @media (min-width: 640px) { .emoji { font-size: 1rem; } }
-    @media (min-width: 768px) { .emoji { font-size: 1.125rem; } }
-    .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
-    .btn-delete { padding: 0.5rem; font-size: 0.75rem; }
-    @media (min-width: 640px) { .btn-delete { padding: 0.75rem; font-size: 0.875rem; } }
-    .chart-error { color: #dc2626; font-size: 0.75rem; text-align: center; margin-top: 0.5rem; }
-  </style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
+  body { font-family: 'Inter', sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); }
+  .container { max-width: 95%; margin: 0 auto; padding: 0.5rem; }
+  @media (min-width: 640px) { .container { max-width: 640px; padding: 1rem; } }
+  @media (min-width: 768px) { .container { max-width: 768px; } }
+  @media (min-width: 1024px) { .container { max-width: 896px; } }
+  .card { background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 0.75rem; margin-bottom: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; overflow: visible; }
+  .card:hover { transform: translateY(-0.25rem); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+  .btn-primary, .btn-delete { background: linear-gradient(to right, #991b1b, #1f2937); color: white; font-weight: 600; border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.3s ease, transform 0.2s ease; }
+  .btn-meal { background: linear-gradient(to right, #0d9488, #2563eb); }
+  .btn-primary:hover, .btn-delete:hover, .btn-meal:hover { background: linear-gradient(to right, #7f1d1d, #111827); transform: scale(1.02); }
+  .btn-meal:hover { background: linear-gradient(to right, #0f766e, #1d4ed8); }
+  .btn-primary:focus, .btn-delete:focus, .btn-meal:focus { outline: none; box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
+  .btn-meal:focus { box-shadow: 0 0 0 3px rgba(20,184,166,0.4); }
+  .tab { padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; color: #1f2937; background: #fee2e2; cursor: pointer; transition: all 0.2s ease; font-size: 0.75rem; }
+  .tab.meal-tab { background: #e6f3fa; }
+  .tab:hover { background: #fecaca; }
+  .tab.meal-tab:hover { background: #d1e7f5; }
+  .tab.active { background: #ef4444; color: white; }
+  .tab.meal-tab.active { background: #0d9488; }
+  @media (min-width: 640px) { .tab { padding: 0.5rem 1.25rem; font-size: 0.875rem; } }
+  .input-field { width: 100%; padding: 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
+  .input-field.meal-input { border-color: #14b8a6; }
+  .input-field:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
+  .input-field.meal-input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.3); }
+  .input-field:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+  .select-wrapper { position: relative; }
+  .select-wrapper select { appearance: none; width: 100%; padding: 0.75rem 2.5rem 0.75rem 0.75rem; background: white; border: 2px solid #ef4444; border-radius: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-size: 0.875rem; transition: all 0.3s ease; }
+  .select-wrapper.meal-select select { border-color: #14b8a6; }
+  .select-wrapper select:focus { outline: none; border-color: #b91c1c; box-shadow: 0 0 0 3px rgba(185,28,28,0.3); }
+  .select-wrapper.meal-select select:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.3); }
+  .select-wrapper select:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+  .select-wrapper::after { content: '▼'; position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #b91c1c; font-size: 0.875rem; pointer-events: none; }
+  .select-wrapper.meal-select::after { color: #0d9488; }
+  @media (min-width: 640px) { .input-field, .select-wrapper select { padding: 0.875rem; font-size: 1rem; } .select-wrapper select { padding-right: 2.75rem; } .select-wrapper::after { right: 1rem; font-size: 1rem; } }
+  .error { color: #dc2626; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 500; }
+  @media (min-width: 640px) { .error { font-size: 0.875rem; } }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .calendar-day { padding: 10px; text-align: center; cursor: pointer; border: 2px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; transition: all 0.2s ease; }
+  .calendar-day:hover { background: #fee2e2; }
+  .completed { background: #ef4444; color: white; border-color: #b91c1c; }
+  .completed svg { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; }
+  .selected { border: 2px solid #1f2937; box-shadow: 0 0 0 3px rgba(31,41,55,0.3); }
+  .tips { background: linear-gradient(to right, #fee2e2, #fecaca); padding: 0.75rem; border-radius: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  .tips.meal-tips { background: linear-gradient(to right, #e6f3fa, #a3e4d7); }
+  @media (min-width: 640px) { .tips { padding: 1rem; } }
+  canvas { display: block !important; width: 100%; max-width: 540px; aspect-ratio: 2 / 1; margin: 0 auto; }
+  @media (min-width: 640px) { canvas { max-width: 390px; } }
+  @media (min-width: 768px) { canvas { max-width: 450px; } }
+  @media (min-width: 1024px) { canvas { max-width: 540px; } }
+  h1 { font-size: 1.5rem; font-weight: 800; color: #7f1d1d; text-align: center; margin-bottom: 0.75rem; transition: transform 0.3s ease; }
+  h1:hover { transform: scale(1.05); }
+  @media (min-width: 640px) { h1 { font-size: 1.75rem; } }
+  @media (min-width: 768px) { h1 { font-size: 2rem; } }
+  @media (min-width: 1024px) { h1 { font-size: 2.5rem; } }
+  h2 { font-size: 1rem; font-weight: 700; color: #b91c1c; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+  h2.meal-header { color: #0d9488; }
+  @media (min-width: 640px) { h2 { font-size: 1.25rem; } }
+  @media (min-width: 768px) { h2 { font-size: 1.5rem; } }
+  .summary { color: #1f2937; font-size: 0.75rem; margin-top: 0.5rem; text-align: center; }
+  @media (min-width: 640px) { .summary { font-size: 0.875rem; } }
+  .emoji { font-size: 0.875rem; }
+  @media (min-width: 640px) { .emoji { font-size: 1rem; } }
+  @media (min-width: 768px) { .emoji { font-size: 1.125rem; } }
+  .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
+  .btn-delete { padding: 0.5rem; font-size: 0.75rem; }
+  @media (min-width: 640px) { .btn-delete { padding: 0.75rem; font-size: 0.875rem; } }
+  .chart-error { color: #dc2626; font-size: 0.75rem; text-align: center; margin-top: 0.5rem; }
+</style>
 </head>
 <body>
   <div class="debug-info" id="debugInfo">Mobile View</div>
@@ -111,7 +111,7 @@
               <option value="Día D - Tren Inferior">Día D - Tren Inferior 🦵</option>
             </select>
           </div>
-          <textarea id="routineDetailsInput" class="input-field mb-3 min-h-[150px]" placeholder="Detalles de la rutina (ej. Sentadillas: 3 series x 10 rep)"></textarea>
+          <textarea id="routineDetailsInput" class="input-field mb-3 min-h-[380px]" placeholder="Detalles de la rutina (ej. Sentadillas: 3 series x 10 rep)"></textarea>
           <input type="number" id="caloriesInput" class="input-field mb-3" placeholder="Calorías quemadas (kcal)" min="0">
           <label class="flex items-center gap-2 mb-3">
             <input type="checkbox" id="completedCheckbox" class="h-5 w-5 text-red-600">
@@ -284,841 +284,868 @@
   </div>
 
   <script>
-    const API_BASE_URL = 'https://gym-tracker-ants.onrender.com/api';
-    const routineDetailsMap = {
-      "Día A - Full Body A + Cardio": "Sentadillas: 3 series x 10 rep\nPress de banca: 3 series x 8 rep\nRemo con barra: 3 series x 10 rep\nPlancha: 3 x 30s\nCardio: 20 min cinta",
-      "Día B - Full Body B + Cardio": "Peso muerto: 3 series x 8 rep\nPress militar: 3 series x 10 rep\nDominadas: 3 series x 8 rep\nAbdominales: 3 x 15 rep\nCardio: 15 min elíptica",
-      "Día C - Tren Superior": "Press de banca inclinado: 3 series x 10 rep\nCurl de bíceps: 3 series x 12 rep\nFondos en paralelas: 3 series x 10 rep\nElevaciones laterales: 3 series x 12 rep",
-      "Día D - Tren Inferior": "Sentadillas hack: 3 series x 10 rep\nPrensa de piernas: 3 series x 12 rep\nZancadas: 3 series x 10 rep\nElevación de talones: 3 series x 15 rep"
-    };
+  const API_BASE_URL = 'https://gym-tracker-ants.onrender.com/api';
+  const routineDetailsMap = {
+    "Día A - Full Body A + Cardio": "Sentadillas: 3 series x 10 rep\nPress de banca: 3 series x 8 rep\nRemo con barra: 3 series x 10 rep\nPlancha: 3 x 30s\nCardio: 20 min cinta",
+    "Día B - Full Body B + Cardio": "Peso muerto: 3 series x 8 rep\nPress militar: 3 series x 10 rep\nDominadas: 3 series x 8 rep\nAbdominales: 3 x 15 rep\nCardio: 15 min elíptica",
+    "Día C - Tren Superior": "Press de banca inclinado: 3 series x 10 rep\nCurl de bíceps: 3 series x 12 rep\nFondos en paralelas: 3 series x 10 rep\nElevaciones laterales: 3 series x 12 rep",
+    "Día D - Tren Inferior": "Sentadillas hack: 3 series x 10 rep\nPrensa de piernas: 3 series x 12 rep\nZancadas: 3 series x 10 rep\nElevación de talones: 3 series x 15 rep"
+  };
 
-    let currentDate = new Date();
-    let selectedDay = null;
-    let routineWeeklyChart, routinePieChart, mealWeeklyChart, mealMonthlyChart, mealPieChart, combinedChart;
+  let currentDate = new Date();
+  let selectedDay = null;
+  let routineWeeklyChart, routinePieChart, mealWeeklyChart, mealMonthlyChart, mealPieChart, combinedChart;
 
-    function updateDebugInfo() {
-      const debugInfo = document.getElementById('debugInfo');
-      if (!debugInfo) return;
-      const width = window.innerWidth;
-      debugInfo.textContent = width >= 1024 ? 'Desktop View (1024px+)' :
-                              width >= 768 ? 'Tablet View (768px-1023px)' :
-                              width >= 640 ? 'Small Tablet View (640px-767px)' : 'Mobile View (<640px)';
-      console.log('CSS loaded, current view:', debugInfo.textContent);
+  function updateDebugInfo() {
+    const debugInfo = document.getElementById('debugInfo');
+    if (!debugInfo) return;
+    const width = window.innerWidth;
+    debugInfo.textContent = width >= 1024 ? 'Desktop View (1024px+)' :
+                            width >= 768 ? 'Tablet View (768px-1023px)' :
+                            width >= 640 ? 'Small Tablet View (640px-767px)' : 'Mobile View (<640px)';
+    console.log('CSS loaded, current view:', debugInfo.textContent);
+  }
+
+  function normalizeDate(dateStr) {
+    const [day, month, year] = dateStr.split('/');
+    return `${parseInt(day).toString().padStart(2, '0')}/${parseInt(month).toString().padStart(2, '0')}/${year}`;
+  }
+
+  async function loadCalendar() {
+    console.log('Loading calendar...');
+    const monthYear = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    document.getElementById('currentMonth').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '<div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>';
+
+    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    let routines = [];
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/routines`, { method: 'GET' });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al obtener rutinas: ${response.status} ${errorData.error || response.statusText}`);
+      }
+      routines = await response.json();
+      routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
+      console.log('Retrieved routines from MongoDB:', routines);
+    } catch (error) {
+      console.error('Error fetching routines:', error.message);
+      document.getElementById('routineError').textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
+      document.getElementById('routineError').style.display = 'block';
+      return;
     }
 
-    function normalizeDate(dateStr) {
-      const [day, month, year] = dateStr.split('/');
-      return `${parseInt(day).toString().padStart(2, '0')}/${parseInt(month).toString().padStart(2, '0')}/${year}`;
+    for (let i = 0; i < firstDay; i++) {
+      calendar.innerHTML += '<div></div>';
     }
 
-    async function loadCalendar() {
-      console.log('Loading calendar...');
-      const monthYear = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-      document.getElementById('currentMonth').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
-      const calendar = document.getElementById('calendar');
-      calendar.innerHTML = '<div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>';
-
-      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-      const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-      let routines = [];
-
-      try {
-        const response = await fetch(`${API_BASE_URL}/routines`, { method: 'GET' });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Error al obtener rutinas: ${response.status} ${errorData.error || response.statusText}`);
-        }
-        routines = await response.json();
-        routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
-        console.log('Retrieved routines from MongoDB:', routines);
-      } catch (error) {
-        console.error('Error fetching routines:', error.message);
-        document.getElementById('routineError').textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
-        document.getElementById('routineError').style.display = 'block';
-        return;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = normalizeDate(`${day}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`);
+      const routine = routines.find(r => r.date === date);
+      const div = document.createElement('div');
+      div.className = `calendar-day ${routine && routine.completed ? 'completed' : ''} ${selectedDay === date ? 'selected' : ''}`;
+      div.textContent = day;
+      if (routine && routine.completed) {
+        div.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.2l-3.5-3.5a1 1 0 00-1.4 1.4l4.2 4.2a1 1 0 001.4 0l8-8a1 1 0 00-1.4-1.4L9 16.2z"/></svg>`;
       }
-
-      for (let i = 0; i < firstDay; i++) {
-        calendar.innerHTML += '<div></div>';
-      }
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = normalizeDate(`${day}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`);
-        const routine = routines.find(r => r.date === date);
-        const div = document.createElement('div');
-        div.className = `calendar-day ${routine && routine.completed ? 'completed' : ''} ${selectedDay === date ? 'selected' : ''}`;
-        div.textContent = day;
-        if (routine && routine.completed) {
-          div.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 16.2l-3.5-3.5a1 1 0 00-1.4 1.4l4.2 4.2a1 1 0 001.4 0l8-8a1 1 0 00-1.4-1.4L9 16.2z"/></svg>`;
-        }
-        div.onclick = () => selectDay(date, routine);
-        calendar.appendChild(div);
-      }
-
-      updateViews('routineWeekly');
+      div.onclick = () => selectDay(date, routine);
+      calendar.appendChild(div);
     }
 
-    function selectDay(date, routine) {
-      selectedDay = normalizeDate(date);
-      document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
-      const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
-      if (dayDiv) dayDiv.classList.add('selected');
+    updateViews('routineWeeklyView');
+  }
 
-      const routineDetails = document.getElementById('routineDetails');
-      const routineText = document.getElementById('routineText');
-      const detailsText = document.getElementById('detailsText');
-      const caloriesText = document.getElementById('caloriesText');
-      routineDetails.classList.remove('hidden');
-      routineText.textContent = routine ? `Rutina: ${routine.routine} 🏋️‍♂️` : 'No hay rutina asignada';
-      detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : routine ? `Detalles: ${routineDetailsMap[routine.routine] || 'No hay detalles predefinidos'}` : 'No hay detalles';
-      caloriesText.textContent = routine && routine.caloriesBurned ? `Calorías quemadas: ${routine.caloriesBurned} kcal 🔥` : 'No hay calorías registradas';
-      document.getElementById('routineSelect').value = routine ? routine.routine : '';
-      document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : routine ? routineDetailsMap[routine.routine] || '' : '';
-      document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
-      document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
+  function selectDay(date, routine) {
+    selectedDay = normalizeDate(date);
+    document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
+    const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
+    if (dayDiv) dayDiv.classList.add('selected');
+
+    const routineDetails = document.getElementById('routineDetails');
+    const routineText = document.getElementById('routineText');
+    const detailsText = document.getElementById('detailsText');
+    const caloriesText = document.getElementById('caloriesText');
+    routineDetails.classList.remove('hidden');
+    routineText.textContent = routine ? `Rutina: ${routine.routine} 🏋️‍♂️` : 'No hay rutina asignada';
+    detailsText.textContent = routine && routine.details ? `Detalles: ${routine.details}` : routine ? `Detalles: ${routineDetailsMap[routine.routine] || 'No hay detalles predefinidos'}` : 'No hay detalles';
+    caloriesText.textContent = routine && routine.caloriesBurned ? `Calorías quemadas: ${routine.caloriesBurned} kcal 🔥` : 'No hay calorías registradas';
+    document.getElementById('routineSelect').value = routine ? routine.routine : '';
+    document.getElementById('routineDetailsInput').value = routine && routine.details ? routine.details : routine ? routineDetailsMap[routine.routine] || '' : '';
+    document.getElementById('caloriesInput').value = routine && routine.caloriesBurned ? routine.caloriesBurned : '';
+    document.getElementById('completedCheckbox').checked = routine ? routine.completed : false;
+  }
+
+  async function saveRoutine() {
+    console.log('Saving routine...');
+    if (!selectedDay) {
+      document.getElementById('routineError').textContent = 'Selecciona un día 📅';
+      document.getElementById('routineError').style.display = 'block';
+      return;
+    }
+    const routine = document.getElementById('routineSelect').value;
+    const details = document.getElementById('routineDetailsInput').value || routineDetailsMap[routine] || '';
+    const caloriesBurned = parseInt(document.getElementById('caloriesInput').value) || 0;
+    const completed = document.getElementById('completedCheckbox').checked;
+    if (!routine || caloriesBurned < 0) {
+      document.getElementById('routineError').textContent = 'Selecciona una rutina y calorías válidas ⚠️';
+      document.getElementById('routineError').style.display = 'block';
+      return;
     }
 
-    async function saveRoutine() {
-      console.log('Saving routine...');
-      if (!selectedDay) {
-        document.getElementById('routineError').textContent = 'Selecciona un día 📅';
-        document.getElementById('routineError').style.display = 'block';
-        return;
-      }
-      const routine = document.getElementById('routineSelect').value;
-      const details = document.getElementById('routineDetailsInput').value || routineDetailsMap[routine] || '';
-      const caloriesBurned = parseInt(document.getElementById('caloriesInput').value) || 0;
-      const completed = document.getElementById('completedCheckbox').checked;
-      if (!routine || caloriesBurned < 0) {
-        document.getElementById('routineError').textContent = 'Selecciona una rutina y calorías válidas ⚠️';
-        document.getElementById('routineError').style.display = 'block';
-        return;
-      }
-
-      try {
-        const routineData = { date: selectedDay, routine, details, caloriesBurned, completed };
-        console.log('Sending routine data:', routineData);
-        const response = await fetch(`${API_BASE_URL}/routines`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(routineData)
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Error al guardar rutina: ${response.status} ${errorData.error || response.statusText}`);
-        }
-        console.log('Saved routine to MongoDB:', routineData);
-        alert('¡Rutina guardada! 🎉');
-        document.getElementById('routineError').style.display = 'none';
-        loadCalendar();
-      } catch (error) {
-        console.error('Error saving routine:', error.message);
-        document.getElementById('routineError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
-        document.getElementById('routineError').style.display = 'block';
-      }
-    }
-
-    async function deleteRoutine(date) {
-      date = normalizeDate(date);
-      console.log('Attempting to delete routine for date:', date);
-      if (!confirm(`¿Estás seguro de eliminar la rutina del ${date}? 🗑️`)) {
-        console.log('Deletion cancelled by user');
-        return;
-      }
-      try {
-        const response = await fetch(`${API_BASE_URL}/routines/${encodeURIComponent(date)}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Error al eliminar rutina: ${response.status} ${errorData.error || response.statusText}`);
-        }
-        console.log('Routine deleted from MongoDB for date:', date);
-        alert('¡Rutina eliminada! 🗑️');
-        document.getElementById('routineError').style.display = 'none';
-        loadCalendar();
-      } catch (error) {
-        console.error('Error deleting routine:', error.message);
-        document.getElementById('routineError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
-        document.getElementById('routineError').style.display = 'block';
-      }
-    }
-
-    async function saveMeal() {
-      console.log('Saving meal...');
-      const meal = document.getElementById('mealSelect').value;
-      const calories = parseInt(document.getElementById('mealCaloriesInput').value) || 0;
-      const today = normalizeDate(new Date().toLocaleDateString('es-AR'));
-      if (!meal || calories <= 0) {
-        document.getElementById('mealError').textContent = 'Elige una comida y calorías válidas ⚠️';
-        document.getElementById('mealError').style.display = 'block';
-        return;
-      }
-
-      try {
-        const mealData = { date: today, meal, calories };
-        console.log('Sending meal data:', mealData);
-        const response = await fetch(`${API_BASE_URL}/meals`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mealData)
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Error al guardar comida: ${response.status} ${errorData.error || response.statusText}`);
-        }
-        console.log('Saved meal to MongoDB:', mealData);
-        alert('¡Comida registrada! 🎉');
-        document.getElementById('mealSelect').value = '';
-        document.getElementById('mealCaloriesInput').value = '';
-        document.getElementById('mealError').style.display = 'none';
-        updateViews('mealWeekly');
-      } catch (error) {
-        console.error('Error saving meal:', error.message);
-        document.getElementById('mealError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
-        document.getElementById('mealError').style.display = 'block';
-      }
-    }
-
-    async function deleteMeal(date, meal) {
-      date = normalizeDate(date);
-      console.log('Attempting to delete meal for date:', date, 'meal:', meal);
-      if (!confirm(`¿Estás seguro de eliminar la comida ${meal} del ${date}? 🗑️`)) {
-        console.log('Deletion cancelled by user');
-        return;
-      }
-      try {
-        const response = await fetch(`${API_BASE_URL}/meals/${encodeURIComponent(date)}/${encodeURIComponent(meal)}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Error al eliminar comida: ${response.status} ${errorData.error || response.statusText}`);
-        }
-        console.log('Meal deleted from MongoDB for date:', date, 'meal:', meal);
-        alert('¡Comida eliminada! 🗑️');
-        document.getElementById('mealError').style.display = 'none';
-        updateViews('mealWeekly');
-      } catch (error) {
-        console.error('Error deleting meal:', error.message);
-        document.getElementById('mealError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
-        document.getElementById('mealError').style.display = 'block';
-      }
-    }
-
-    function getWeekDates() {
-      const today = new Date();
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
-      return Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(monday);
-        date.setDate(monday.getDate() + i);
-        return normalizeDate(date.toLocaleDateString('es-AR'));
+    try {
+      const routineData = { date: selectedDay, routine, details, caloriesBurned, completed };
+      console.log('Sending routine data:', routineData);
+      const response = await fetch(`${API_BASE_URL}/routines`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(routineData)
       });
-    }
-
-    function getMonthDates() {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const days = [];
-      for (let d = firstDay; d <= lastDay; d.setDate(d.getDate() + 1)) {
-        days.push(normalizeDate(new Date(d).toLocaleDateString('es-AR')));
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al guardar rutina: ${response.status} ${errorData.error || response.statusText}`);
       }
-      return days;
+      console.log('Saved routine to MongoDB:', routineData);
+      alert('¡Rutina guardada! 🎉');
+      document.getElementById('routineError').style.display = 'none';
+      loadCalendar();
+    } catch (error) {
+      console.error('Error saving routine:', error.message);
+      document.getElementById('routineError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
+      document.getElementById('routineError').style.display = 'block';
     }
+  }
 
-    async function updateViews(currentView) {
-      console.log('Updating view:', currentView);
-      const routineError = document.getElementById('routineError');
-      const mealError = document.getElementById('mealError');
-      let routines = [], meals = [];
-
-      // Reset error messages
-      ['routineWeeklyError', 'routinePieError', 'combinedError', 'mealWeeklyError', 'mealMonthlyError', 'mealPieError'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.style.display = 'none';
-          el.textContent = '';
-        }
+  async function deleteRoutine(date) {
+    date = normalizeDate(date);
+    console.log('Attempting to delete routine for date:', date);
+    if (!confirm(`¿Estás seguro de eliminar la rutina del ${date}? 🗑️`)) {
+      console.log('Deletion cancelled by user');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/routines/${encodeURIComponent(date)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
       });
-
-      // Fetch data
-      try {
-        const [routinesResponse, mealsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/routines`, { method: 'GET' }),
-          fetch(`${API_BASE_URL}/meals`, { method: 'GET' })
-        ]);
-        if (!routinesResponse.ok) {
-          const errorData = await routinesResponse.json().catch(() => ({}));
-          throw new Error(`Error al obtener rutinas: ${routinesResponse.status} ${errorData.error || routinesResponse.statusText}`);
-        }
-        if (!mealsResponse.ok) {
-          const errorData = await mealsResponse.json().catch(() => ({}));
-          throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || response.statusText}`);
-        }
-        routines = await routinesResponse.json();
-        meals = await mealsResponse.json();
-        routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
-        meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
-        console.log('Retrieved from MongoDB:', { routines, meals });
-      } catch (error) {
-        console.error('Error fetching data:', error.message);
-        routineError.textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
-        mealError.textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
-        routineError.style.display = mealError.style.display = 'block';
-        return;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al eliminar rutina: ${response.status} ${errorData.error || response.statusText}`);
       }
+      console.log('Routine deleted from MongoDB for date:', date);
+      alert('¡Rutina eliminada! 🗑️');
+      document.getElementById('routineError').style.display = 'none';
+      loadCalendar();
+    } catch (error) {
+      console.error('Error deleting routine:', error.message);
+      document.getElementById('routineError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
+      document.getElementById('routineError').style.display = 'block';
+    }
+  }
 
-      // Helper function to initialize chart
-      function initChart(canvasId, config, chartVar) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas || !window.Chart) {
-          console.error(`Canvas ${canvasId} or Chart.js not found`);
-          const errorEl = document.getElementById(`${canvasId.replace('Chart', 'Error')}`);
-          if (errorEl) {
-            errorEl.textContent = `Error al cargar gráfico: Canvas o Chart.js no disponible`;
-            errorEl.style.display = 'block';
-          }
-          return null;
-        }
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = 200;
-        canvas.style.display = 'block';
-        if (chartVar) chartVar.destroy();
-        console.log(`Initializing chart ${canvasId} with config:`, config);
-        const newChart = new Chart(canvas, config);
-        newChart.resize();
-        return newChart;
+  async function saveMeal() {
+    console.log('Saving meal...');
+    const meal = document.getElementById('mealSelect').value;
+    const calories = parseInt(document.getElementById('mealCaloriesInput').value) || 0;
+    const today = normalizeDate(new Date().toLocaleDateString('es-AR'));
+    if (!meal || calories <= 0) {
+      document.getElementById('mealError').textContent = 'Elige una comida y calorías válidas ⚠️';
+      document.getElementById('mealError').style.display = 'block';
+      return;
+    }
+
+    try {
+      const mealData = { date: today, meal, calories };
+      console.log('Sending meal data:', mealData);
+      const response = await fetch(`${API_BASE_URL}/meals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mealData)
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al guardar comida: ${response.status} ${errorData.error || response.statusText}`);
       }
+      console.log('Saved meal to MongoDB:', mealData);
+      alert('¡Comida registrada! 🎉');
+      document.getElementById('mealSelect').value = '';
+      document.getElementById('mealCaloriesInput').value = '';
+      document.getElementById('mealError').style.display = 'none';
+      updateViews('mealWeeklyView');
+    } catch (error) {
+      console.error('Error saving meal:', error.message);
+      document.getElementById('mealError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
+      document.getElementById('mealError').style.display = 'block';
+    }
+  }
 
-      // Routine Weekly Chart
-      if (currentView === 'routineWeeklyView') {
-        const weekDates = getWeekDates();
-        console.log('Week dates for routineWeekly:', weekDates);
-        const routineWeeklyCalories = weekDates.map(date => {
-          const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
-          const total = dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
-          console.log(`Calories for ${date}: ${total}`);
-          return total;
-        });
-        const routineWeeklySummary = document.getElementById('routineWeeklySummary');
-        if (routineWeeklySummary) {
-          const total = routineWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
-          routineWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
-          console.log('Routine weekly summary:', routineWeeklySummary.textContent);
+  async function deleteMeal(date, meal) {
+    date = normalizeDate(date);
+    console.log('Attempting to delete meal for date:', date, 'meal:', meal);
+    if (!confirm(`¿Estás seguro de eliminar la comida ${meal} del ${date}? 🗑️`)) {
+      console.log('Deletion cancelled by user');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/meals/${encodeURIComponent(date)}/${encodeURIComponent(meal)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al eliminar comida: ${response.status} ${errorData.error || response.statusText}`);
+      }
+      console.log('Meal deleted from MongoDB for date:', date, 'meal:', meal);
+      alert('¡Comida eliminada! 🗑️');
+      document.getElementById('mealError').style.display = 'none';
+      updateViews('mealWeeklyView');
+    } catch (error) {
+      console.error('Error deleting meal:', error.message);
+      document.getElementById('mealError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
+      document.getElementById('mealError').style.display = 'block';
+    }
+  }
+
+  function getWeekDates() {
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      return normalizeDate(date.toLocaleDateString('es-AR'));
+    });
+  }
+
+  function getMonthDates() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days = [];
+    for (let d = firstDay; d <= lastDay; d.setDate(d.getDate() + 1)) {
+      days.push(normalizeDate(new Date(d).toLocaleDateString('es-AR')));
+    }
+    return days;
+  }
+
+  async function updateViews(currentView) {
+    console.log('Updating view:', currentView);
+    const routineError = document.getElementById('routineError');
+    const mealError = document.getElementById('mealError');
+    let routines = [], meals = [];
+
+    // Reset error messages
+    ['routineWeeklyError', 'routinePieError', 'combinedError', 'mealWeeklyError', 'mealMonthlyError', 'mealPieError'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.display = 'none';
+        el.textContent = '';
+      }
+    });
+
+    // Fetch data
+    try {
+      const [routinesResponse, mealsResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/routines`, { method: 'GET' }),
+        fetch(`${API_BASE_URL}/meals`, { method: 'GET' })
+      ]);
+      if (!routinesResponse.ok) {
+        const errorData = await routinesResponse.json().catch(() => ({}));
+        throw new Error(`Error al obtener rutinas: ${routinesResponse.status} ${errorData.error || routinesResponse.statusText}`);
+      }
+      if (!mealsResponse.ok) {
+        const errorData = await mealsResponse.json().catch(() => ({}));
+        throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || mealsResponse.statusText}`);
+      }
+      routines = await routinesResponse.json();
+      meals = await mealsResponse.json();
+      routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
+      meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
+      console.log('Retrieved from MongoDB:', { routines, meals });
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+      routineError.textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
+      mealError.textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
+      routineError.style.display = mealError.style.display = 'block';
+      return;
+    }
+
+    // Helper function to initialize chart
+    function initChart(canvasId, config, chartVar) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !window.Chart) {
+        console.error(`Canvas ${canvasId} or Chart.js not found`);
+        const errorEl = document.getElementById(`${canvasId.replace('Chart', 'Error')}`);
+        if (errorEl) {
+          errorEl.textContent = `Error al cargar gráfico: Canvas o Chart.js no disponible`;
+          errorEl.style.display = 'block';
         }
-        routineWeeklyChart = initChart('routineWeeklyChart', {
-          type: 'bar',
-          data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            datasets: [{
+        return null;
+      }
+      // Reset canvas attributes
+      canvas.removeAttribute('width');
+      canvas.removeAttribute('height');
+      canvas.style.width = '100%';
+      canvas.style.height = '';
+      canvas.style.display = 'block';
+      if (chartVar) chartVar.destroy();
+      console.log(`Initializing chart ${canvasId} with config:`, config);
+      const newChart = new Chart(canvas, config);
+      newChart.resize();
+      return newChart;
+    }
+
+    // Routine Weekly Chart
+    if (currentView === 'routineWeeklyView') {
+      const weekDates = getWeekDates();
+      console.log('Week dates for routineWeekly:', weekDates);
+      const routineWeeklyCalories = weekDates.map(date => {
+        const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
+        const total = dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
+        console.log(`Calories for ${date}: ${total}`);
+        return total;
+      });
+      const routineWeeklySummary = document.getElementById('routineWeeklySummary');
+      if (routineWeeklySummary) {
+        const total = routineWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
+        routineWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
+        console.log('Routine weekly summary:', routineWeeklySummary.textContent);
+      }
+      routineWeeklyChart = initChart('routineWeeklyChart', {
+        type: 'bar',
+        data: {
+          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+          datasets: [{
+            label: 'Calorías Quemadas',
+            data: routineWeeklyCalories,
+            backgroundColor: '#ef4444',
+            borderColor: '#b91c1c',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Calorías' } },
+            x: { title: { display: true, text: 'Días' } }
+          },
+          plugins: { legend: { display: false } },
+          animation: { duration: 600, easing: 'easeOutQuart' }
+        }
+      }, routineWeeklyChart);
+    }
+
+    // Routine Pie Chart
+    if (currentView === 'routinePieView') {
+      const routineCounts = routines.reduce((acc, r) => {
+        if (r.completed && r.routine) {
+          acc[r.routine] = (acc[r.routine] || 0) + 1;
+        }
+        return acc;
+      }, {});
+      const labels = Object.keys(routineCounts).length ? Object.keys(routineCounts) : ['No hay datos'];
+      const data = Object.values(routineCounts).length ? Object.values(routineCounts) : [1];
+      const routinePieSummary = document.getElementById('routinePieSummary');
+      if (routinePieSummary) {
+        const total = data.reduce((sum, count) => sum + count, 0);
+        routinePieSummary.textContent = `Total: ${total} rutinas completadas`;
+        console.log('Routine pie summary:', routinePieSummary.textContent);
+      }
+      routinePieChart = initChart('routinePieChart', {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: ['#ef4444', '#f87171', '#fca5a5', '#fecaca'],
+            borderColor: ['#b91c1c', '#c53030', '#dc2626', '#7f1d1d'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          plugins: { legend: { position: 'bottom' } },
+          animation: { duration: 600, easing: 'easeOutQuart' }
+        }
+      }, routinePieChart);
+    }
+
+    // Routine Table View
+    if (currentView === 'routineTableView') {
+      updateRoutineTable(routines);
+    }
+
+    // Meal Weekly Chart
+    if (currentView === 'mealWeeklyView') {
+      const weekDates = getWeekDates();
+      console.log('Week dates for mealWeekly:', weekDates);
+      const mealWeeklyCalories = weekDates.map(date => {
+        const dayMeals = meals.filter(m => m.date === date && m.calories);
+        const total = dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+        console.log(`Calories for ${date}: ${total}`);
+        return total;
+      });
+      const mealWeeklySummary = document.getElementById('mealWeeklySummary');
+      if (mealWeeklySummary) {
+        const total = mealWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
+        mealWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
+        console.log('Meal weekly summary:', mealWeeklySummary.textContent);
+      }
+      mealWeeklyChart = initChart('mealWeeklyChart', {
+        type: 'bar',
+        data: {
+          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+          datasets: [{
+            label: 'Calorías Consumidas',
+            data: mealWeeklyCalories,
+            backgroundColor: '#4fd1c5',
+            borderColor: '#2c7a7b',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Calorías' } },
+            x: { title: { display: true, text: 'Días' } }
+          },
+          plugins: { legend: { display: false } },
+          animation: { duration: 600, easing: 'easeOutQuart' }
+        }
+      }, mealWeeklyChart);
+    }
+
+    // Meal Monthly Chart
+    if (currentView === 'mealMonthlyView') {
+      const monthDates = getMonthDates();
+      console.log('Month dates for mealMonthly:', monthDates);
+      const monthlyCalories = monthDates.map(date => {
+        const dayMeals = meals.filter(m => m.date === date && m.calories);
+        const total = dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+        console.log(`Calories for ${date}: ${total}`);
+        return total;
+      });
+      const mealMonthlySummary = document.getElementById('mealMonthlySummary');
+      if (mealMonthlySummary) {
+        const total = monthlyCalories.reduce((sum, cal) => sum + cal, 0);
+        mealMonthlySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / monthDates.length).toFixed(0)} kcal/día)`;
+        console.log('Meal monthly summary:', mealMonthlySummary.textContent);
+      }
+      mealMonthlyChart = initChart('mealMonthlyChart', {
+        type: 'bar',
+        data: {
+          labels: monthDates.map(date => date.split('/')[0]),
+          datasets: [{
+            label: 'Calorías Consumidas',
+            data: monthlyCalories,
+            backgroundColor: '#4fd1c5',
+            borderColor: '#2c7a7b',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Calorías' } },
+            x: { title: { display: true, text: 'Días del Mes' } }
+          },
+          plugins: { legend: { display: false } },
+          animation: { duration: 600, easing: 'easeOutQuart' }
+        }
+      }, mealMonthlyChart);
+    }
+
+    // Meal Pie Chart
+    if (currentView === 'mealPieView') {
+      const mealCounts = meals.reduce((acc, m) => {
+        if (m.meal && m.calories) {
+          acc[m.meal] = (acc[m.meal] || 0) + Number(m.calories);
+        }
+        return acc;
+      }, {});
+      const labels = Object.keys(mealCounts).length ? Object.keys(mealCounts) : ['No hay datos'];
+      const data = Object.values(mealCounts).length ? Object.values(mealCounts) : [1];
+      const mealPieSummary = document.getElementById('mealPieSummary');
+      if (mealPieSummary) {
+        const total = data.reduce((sum, cal) => sum + cal, 0);
+        mealPieSummary.textContent = `Total: ${total} kcal`;
+        console.log('Meal pie summary:', mealPieSummary.textContent);
+      }
+      mealPieChart = initChart('mealPieChart', {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: ['#4fd1c5', '#5eead4', '#99f6e4', '#a3e4d7'],
+            borderColor: ['#2c7a7b', '#0f766e', '#14b8a6', '#115e59'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          plugins: { legend: { position: 'bottom' } },
+          animation: { duration: 600, easing: 'easeOutQuart' }
+        }
+      }, mealPieChart);
+    }
+
+    // Meal Table View
+    if (currentView === 'mealTableView') {
+      updateMealTable(meals);
+    }
+
+    // Combined Chart
+    if (currentView === 'combinedView') {
+      const weekDates = getWeekDates();
+      console.log('Week dates for combined:', weekDates);
+      const routineCalories = weekDates.map(date => {
+        const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
+        return dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
+      });
+      const mealCalories = weekDates.map(date => {
+        const dayMeals = meals.filter(m => m.date === date && m.calories);
+        return dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+      });
+      const combinedSummary = document.getElementById('combinedSummary');
+      if (combinedSummary) {
+        const totalRoutines = routineCalories.reduce((sum, cal) => sum + cal, 0);
+        const totalMeals = mealCalories.reduce((sum, cal) => sum + cal, 0);
+        combinedSummary.textContent = `Quemadas: ${totalRoutines} kcal | Consumidas: ${totalMeals} kcal | Balance: ${totalMeals - totalRoutines} kcal`;
+        console.log('Combined summary:', combinedSummary.textContent);
+      }
+      combinedChart = initChart('combinedChart', {
+        type: 'bar',
+        data: {
+          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+          datasets: [
+            {
               label: 'Calorías Quemadas',
-              data: routineWeeklyCalories,
+              data: routineCalories,
               backgroundColor: '#ef4444',
               borderColor: '#b91c1c',
               borderWidth: 1,
               borderRadius: 4
-            }]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
-            plugins: { legend: { display: false } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        }, routineWeeklyChart);
-      }
-
-      // Routine Pie Chart
-      if (currentView === 'routinePieView') {
-        const routineCounts = routines.reduce((acc, r) => {
-          if (r.completed && r.routine) {
-            acc[r.routine] = (acc[r.routine] || 0) + 1;
-          }
-          return acc;
-        }, {});
-        const labels = Object.keys(routineCounts).length ? Object.keys(routineCounts) : ['No hay datos'];
-        const data = Object.values(routineCounts).length ? Object.values(routineCounts) : [1];
-        const routinePieSummary = document.getElementById('routinePieSummary');
-        if (routinePieSummary) {
-          const total = data.reduce((sum, count) => sum + count, 0);
-          routinePieSummary.textContent = `Total: ${total} rutinas completadas`;
-          console.log('Routine pie summary:', routinePieSummary.textContent);
-        }
-        routinePieChart = initChart('routinePieChart', {
-          type: 'pie',
-          data: {
-            labels,
-            datasets: [{
-              data,
-              backgroundColor: ['#ef4444', '#f87171', '#fca5a5', '#fecaca'],
-              borderColor: ['#b91c1c', '#c53030', '#dc2626', '#7f1d1d'],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            plugins: { legend: { position: 'bottom' } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        }, routinePieChart);
-      }
-
-      // Routine Table View
-      if (currentView === 'routineTableView') {
-        updateRoutineTable(routines);
-      }
-
-      // Meal Weekly Chart
-      if (currentView === 'mealWeeklyView') {
-        const weekDates = getWeekDates();
-        console.log('Week dates for mealWeekly:', weekDates);
-        const mealWeeklyCalories = weekDates.map(date => {
-          const dayMeals = meals.filter(m => m.date === date && m.calories);
-          const total = dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-          console.log(`Calories for ${date}: ${total}`);
-          return total;
-        });
-        const mealWeeklySummary = document.getElementById('mealWeeklySummary');
-        if (mealWeeklySummary) {
-          const total = mealWeeklyCalories.reduce((sum, cal) => sum + cal, 0);
-          mealWeeklySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / 7).toFixed(0)} kcal/día)`;
-          console.log('Meal weekly summary:', mealWeeklySummary.textContent);
-        }
-        mealWeeklyChart = initChart('mealWeeklyChart', {
-          type: 'bar',
-          data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            datasets: [{
+            },
+            {
               label: 'Calorías Consumidas',
-              data: mealWeeklyCalories,
+              data: mealCalories,
               backgroundColor: '#4fd1c5',
               borderColor: '#2c7a7b',
               borderWidth: 1,
               borderRadius: 4
-            }]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
-            plugins: { legend: { display: false } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        }, mealWeeklyChart);
-      }
-
-      // Meal Monthly Chart
-      if (currentView === 'mealMonthlyView') {
-        const monthDates = getMonthDates();
-        console.log('Month dates for mealMonthly:', monthDates);
-        const monthlyCalories = monthDates.map(date => {
-          const dayMeals = meals.filter(m => m.date === date && m.calories);
-          const total = dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-          console.log(`Calories for ${date}: ${total}`);
-          return total;
-        });
-        const mealMonthlySummary = document.getElementById('mealMonthlySummary');
-        if (mealMonthlySummary) {
-          const total = monthlyCalories.reduce((sum, cal) => sum + cal, 0);
-          mealMonthlySummary.textContent = `Total: ${total} kcal (Promedio: ${(total / monthDates.length).toFixed(0)} kcal/día)`;
-          console.log('Meal monthly summary:', mealMonthlySummary.textContent);
-        }
-        mealMonthlyChart = initChart('mealMonthlyChart', {
-          type: 'bar',
-          data: {
-            labels: monthDates.map(date => date.split('/')[0]),
-            datasets: [{
-              label: 'Calorías Consumidas',
-              data: monthlyCalories,
-              backgroundColor: '#4fd1c5',
-              borderColor: '#2c7a7b',
-              borderWidth: 1,
-              borderRadius: 4
-            }]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días del Mes' } } },
-            plugins: { legend: { display: false } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        }, mealMonthlyChart);
-      }
-
-      // Meal Pie Chart
-      if (currentView === 'mealPieView') {
-        const mealCounts = meals.reduce((acc, m) => {
-          if (m.meal && m.calories) {
-            acc[m.meal] = (acc[m.meal] || 0) + Number(m.calories);
-          }
-          return acc;
-        }, {});
-        const labels = Object.keys(mealCounts).length ? Object.keys(mealCounts) : ['No hay datos'];
-        const data = Object.values(mealCounts).length ? Object.values(mealCounts) : [1];
-        const mealPieSummary = document.getElementById('mealPieSummary');
-        if (mealPieSummary) {
-          const total = data.reduce((sum, cal) => sum + cal, 0);
-          mealPieSummary.textContent = `Total: ${total} kcal`;
-          console.log('Meal pie summary:', mealPieSummary.textContent);
-        }
-        mealPieChart = initChart('mealPieChart', {
-          type: 'pie',
-          data: {
-            labels,
-            datasets: [{
-              data,
-              backgroundColor: ['#4fd1c5', '#5eead4', '#99f6e4', '#a3e4d7'],
-              borderColor: ['#2c7a7b', '#0f766e', '#14b8a6', '#115e59'],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            plugins: { legend: { position: 'bottom' } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        }, mealPieChart);
-      }
-
-      // Meal Table View
-      if (currentView === 'mealTableView') {
-        updateMealTable(meals);
-      }
-
-      // Combined Chart
-      if (currentView === 'combinedView') {
-        const weekDates = getWeekDates();
-        console.log('Week dates for combined:', weekDates);
-        const routineCalories = weekDates.map(date => {
-          const dayRoutines = routines.filter(r => r.date === date && r.completed && r.caloriesBurned);
-          return dayRoutines.reduce((sum, r) => sum + (Number(r.caloriesBurned) || 0), 0);
-        });
-        const mealCalories = weekDates.map(date => {
-          const dayMeals = meals.filter(m => m.date === date && m.calories);
-          return dayMeals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
-        });
-        const combinedSummary = document.getElementById('combinedSummary');
-        if (combinedSummary) {
-          const totalRoutines = routineCalories.reduce((sum, cal) => sum + cal, 0);
-          const totalMeals = mealCalories.reduce((sum, cal) => sum + cal, 0);
-          combinedSummary.textContent = `Quemadas: ${totalRoutines} kcal | Consumidas: ${totalMeals} kcal | Balance: ${totalMeals - totalRoutines} kcal`;
-          console.log('Combined summary:', combinedSummary.textContent);
-        }
-        combinedChart = initChart('combinedChart', {
-          type: 'bar',
-          data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            datasets: [
-              {
-                label: 'Calorías Quemadas',
-                data: routineCalories,
-                backgroundColor: '#ef4444',
-                borderColor: '#b91c1c',
-                borderWidth: 1,
-                borderRadius: 4
-              },
-              {
-                label: 'Calorías Consumidas',
-                data: mealCalories,
-                backgroundColor: '#4fd1c5',
-                borderColor: '#2c7a7b',
-                borderWidth: 1,
-                borderRadius: 4
-              }
-            ]
-          },
-          options: {
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Calorías' } }, x: { title: { display: true, text: 'Días' } } },
-            plugins: { legend: { position: 'bottom' } },
-            animation: { duration: 600, easing: 'easeOutQuart' }
-          }
-        }, combinedChart);
-      }
-    }
-
-    function updateRoutineTable(routines) {
-      const fromMonth = document.getElementById('routineFromMonth').value;
-      const toMonth = document.getElementById('routineToMonth').value;
-      const tableBody = document.getElementById('routineCompletedTableBody');
-      tableBody.innerHTML = '';
-
-      let filteredRoutines = routines.filter(r => r.completed);
-      if (fromMonth || toMonth) {
-        let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
-        let toDate = toMonth ? new Date(toMonth + '-01') : null;
-        if (toDate) {
-          toDate.setMonth(toDate.getMonth() + 1);
-          toDate.setDate(0);
-        }
-        filteredRoutines = filteredRoutines.filter(r => {
-          const [day, month, year] = r.date.split('/');
-          const routineDate = new Date(`${year}-${month}-${day}`);
-          return (!fromDate || routineDate >= fromDate) && (!toDate || routineDate <= toDate);
-        });
-      }
-
-      if (filteredRoutines.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" class="border border-gray-300 p-2 text-center">No hay actividades completadas 😔</td></tr>';
-      } else {
-        filteredRoutines.forEach(routine => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td class="border border-gray-300 p-2">${routine.date}</td>
-            <td class="border border-gray-300 p-2">${routine.caloriesBurned || 0} kcal 🔥</td>
-            <td class="border border-gray-300 p-2">
-              <button class="btn-delete" onclick="deleteRoutine('${routine.date}')"><span class="emoji">🗑️</span> Eliminar</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
-        });
-      }
-    }
-
-    function updateMealTable(meals) {
-      const fromMonth = document.getElementById('mealFromMonth').value;
-      const toMonth = document.getElementById('mealToMonth').value;
-      const tableBody = document.getElementById('mealTableBody');
-      tableBody.innerHTML = '';
-
-      let filteredMeals = meals;
-      if (fromMonth || toMonth) {
-        let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
-        let toDate = toMonth ? new Date(toMonth + '-01') : null;
-        if (toDate) {
-          toDate.setMonth(toDate.getMonth() + 1);
-          toDate.setDate(0);
-        }
-        filteredMeals = filteredMeals.filter(m => {
-          const [day, month, year] = m.date.split('/');
-          const mealDate = new Date(`${year}-${month}-${day}`);
-          return (!fromDate || mealDate >= fromDate) && (!toDate || mealDate <= toDate);
-        });
-      }
-
-      if (filteredMeals.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4" class="border border-gray-300 p-2 text-center">No hay comidas registradas 😔</td></tr>';
-      } else {
-        filteredMeals.forEach(meal => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td class="border border-gray-300 p-2">${meal.date}</td>
-            <td class="border border-gray-300 p-2">${meal.meal}</td>
-            <td class="border border-gray-300 p-2">${meal.calories || 0} kcal 🍽️</td>
-            <td class="border border-gray-300 p-2">
-              <button class="btn-delete btn-meal" onclick="deleteMeal('${meal.date}', '${meal.meal}')"><span class="emoji">🗑️</span> Eliminar</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
-        });
-      }
-    }
-
-    function exportRoutineCsv() {
-      fetch(`${API_BASE_URL}/routines`)
-        .then(response => response.json())
-        .then(routines => {
-          routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
-          let filteredRoutines = routines.filter(r => r.completed);
-          const fromMonth = document.getElementById('routineFromMonth').value;
-          const toMonth = document.getElementById('routineToMonth').value;
-          if (fromMonth || toMonth) {
-            let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
-            let toDate = toMonth ? new Date(toMonth + '-01') : null;
-            if (toDate) {
-              toDate.setMonth(toDate.getMonth() + 1);
-              toDate.setDate(0);
             }
-            filteredRoutines = filteredRoutines.filter(r => {
-              const [day, month, year] = r.date.split('/');
-              const routineDate = new Date(`${year}-${month}-${day}`);
-              return (!fromDate || routineDate >= fromDate) && (!toDate || routineDate <= toDate);
-            });
-          }
-
-          const csvContent = [
-            'Fecha,Calorías Quemadas (kcal)',
-            ...filteredRoutines.map(r => `${r.date},${r.caloriesBurned || 0}`)
-          ].join('\n');
-          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `rutinas_${new Date().toISOString().split('T')[0]}.csv`;
-          link.click();
-        })
-        .catch(error => {
-          console.error('Error exporting routine CSV:', error.message);
-          document.getElementById('routineError').textContent = `Error al exportar: ${error.message}. Intenta de nuevo 🔌`;
-          document.getElementById('routineError').style.display = 'block';
-        });
-    }
-
-    function exportMealCsv() {
-      fetch(`${API_BASE_URL}/meals`)
-        .then(response => response.json())
-        .then(meals => {
-          meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
-          let filteredMeals = meals;
-          const fromMonth = document.getElementById('mealFromMonth').value;
-          const toMonth = document.getElementById('mealToMonth').value;
-          if (fromMonth || toMonth) {
-            let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
-            let toDate = toMonth ? new Date(toMonth + '-01') : null;
-            if (toDate) {
-              toDate.setMonth(toDate.getMonth() + 1);
-              toDate.setDate(0);
-            }
-            filteredMeals = filteredMeals.filter(m => {
-              const [day, month, year] = m.date.split('/');
-              const mealDate = new Date(`${year}-${month}-${day}`);
-              return (!fromDate || mealDate >= fromDate) && (!toDate || mealDate <= toDate);
-            });
-          }
-
-          const csvContent = [
-            'Fecha,Comida,Calorías Consumidas (kcal)',
-            ...filteredMeals.map(m => `${m.date},${m.meal},${m.calories || 0}`)
-          ].join('\n');
-          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `comidas_${new Date().toISOString().split('T')[0]}.csv`;
-          link.click();
-        })
-        .catch(error => {
-          console.error('Error exporting meal CSV:', error.message);
-          document.getElementById('mealError').textContent = `Error al exportar: ${error.message}. Intenta de nuevo 🔌`;
-          document.getElementById('mealError').style.display = 'block';
-        });
-    }
-
-    function showSection(section) {
-      console.log('Switching to section:', section);
-      const routinesSection = document.getElementById('routinesSection');
-      const mealsSection = document.getElementById('mealsSection');
-      if (routinesSection && mealsSection) {
-        routinesSection.style.display = section === 'routines' ? 'block' : 'none';
-        mealsSection.style.display = section === 'meals' ? 'block' : 'none';
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        const activeTab = document.querySelector(`.tab[onclick="showSection('${section}')"]`);
-        if (activeTab) activeTab.classList.add('active');
-        if (section === 'routines') {
-          loadCalendar();
-          showView('routineWeekly');
-        } else {
-          showView('mealWeekly');
+          ]
+        },
+        options: {
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Calorías' } },
+            x: { title: { display: true, text: 'Días' } }
+          },
+          plugins: { legend: { position: 'bottom' } },
+          animation: { duration: 600, easing: 'easeOutQuart' }
         }
-      } else {
-        console.error('Error: routinesSection or mealsSection not found');
-      }
+      }, combinedChart);
     }
+  }
 
-    function showView(view) {
-      console.log('Switching to view:', view);
+  function updateRoutineTable(routines) {
+    const fromMonth = document.getElementById('routineFromMonth').value;
+    const toMonth = document.getElementById('routineToMonth').value;
+    const tableBody = document.getElementById('routineCompletedTableBody');
+    tableBody.innerHTML = '';
 
-      // List of all possible views
-      const views = [
-        'routineWeeklyView',
-        'routinePieView',
-        'routineTableView',
-        'combinedView',
-        'mealWeeklyView',
-        'mealMonthlyView',
-        'mealPieView',
-        'mealTableView'
-      ];
-
-      // Validate view parameter
-      if (!views.includes(view)) {
-        console.error(`Invalid view: ${view}. Available views: ${views.join(', ')}`);
-        return;
+    let filteredRoutines = routines.filter(r => r.completed);
+    if (fromMonth || toMonth) {
+      let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+      let toDate = toMonth ? new Date(toMonth + '-01') : null;
+      if (toDate) {
+        toDate.setMonth(toDate.getMonth() + 1);
+        toDate.setDate(0);
       }
-
-      // Ensure only the active view is visible
-      views.forEach(v => {
-        const element = document.getElementById(v);
-        if (element) {
-          const shouldBeVisible = v === view;
-          element.style.display = shouldBeVisible ? 'block' : 'none';
-          console.log(`Setting ${v} display to: ${element.style.display} (expected: ${shouldBeVisible ? 'block' : 'none'})`);
-          // Force canvas visibility
-          if (shouldBeVisible) {
-            const canvas = element.querySelector('canvas');
-            if (canvas) {
-              canvas.style.display = 'block';
-              canvas.style.width = '100%';
-              canvas.style.height = '200px';
-              console.log(`Ensured canvas visibility for ${v}:`, canvas.id);
-            }
-          }
-        } else {
-          console.error(`Element with ID ${v} not found in DOM`);
-        }
+      filteredRoutines = filteredRoutines.filter(r => {
+        const [day, month, year] = r.date.split('/');
+        const routineDate = new Date(`${year}-${month}-${day}`);
+        return (!fromDate || routineDate >= fromDate) && (!toDate || routineDate <= toDate);
       });
+    }
 
-      // Update active tab
+    if (filteredRoutines.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="3" class="border border-gray-300 p-2 text-center">No hay actividades completadas 😔</td></tr>';
+    } else {
+      filteredRoutines.forEach(routine => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="border border-gray-300 p-2">${routine.date}</td>
+          <td class="border border-gray-300 p-2">${routine.caloriesBurned || 0} kcal 🔥</td>
+          <td class="border border-gray-300 p-2">
+            <button class="btn-delete" onclick="deleteRoutine('${routine.date}')"><span class="emoji">🗑️</span> Eliminar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  }
+
+  function updateMealTable(meals) {
+    const fromMonth = document.getElementById('mealFromMonth').value;
+    const toMonth = document.getElementById('mealToMonth').value;
+    const tableBody = document.getElementById('mealTableBody');
+    tableBody.innerHTML = '';
+
+    let filteredMeals = meals;
+    if (fromMonth || toMonth) {
+      let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+      let toDate = toMonth ? new Date(toMonth + '-01') : null;
+      if (toDate) {
+        toDate.setMonth(toDate.getMonth() + 1);
+        toDate.setDate(0);
+      }
+      filteredMeals = filteredMeals.filter(m => {
+        const [day, month, year] = m.date.split('/');
+        const mealDate = new Date(`${year}-${month}-${day}`);
+        return (!fromDate || mealDate >= fromDate) && (!toDate || mealDate <= toDate);
+      });
+    }
+
+    if (filteredMeals.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="4" class="border border-gray-300 p-2 text-center">No hay comidas registradas 😔</td></tr>';
+    } else {
+      filteredMeals.forEach(meal => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="border border-gray-300 p-2">${meal.date}</td>
+          <td class="border border-gray-300 p-2">${meal.meal}</td>
+          <td class="border border-gray-300 p-2">${meal.calories || 0} kcal 🍽️</td>
+          <td class="border border-gray-300 p-2">
+            <button class="btn-delete btn-meal" onclick="deleteMeal('${meal.date}', '${meal.meal}')"><span class="emoji">🗑️</span> Eliminar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  }
+
+  function exportRoutineCsv() {
+    fetch(`${API_BASE_URL}/routines`)
+      .then(response => response.json())
+      .then(routines => {
+        routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
+        let filteredRoutines = routines.filter(r => r.completed);
+        const fromMonth = document.getElementById('routineFromMonth').value;
+        const toMonth = document.getElementById('routineToMonth').value;
+        if (fromMonth || toMonth) {
+          let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+          let toDate = toMonth ? new Date(toMonth + '-01') : null;
+          if (toDate) {
+            toDate.setMonth(toDate.getMonth() + 1);
+            toDate.setDate(0);
+          }
+          filteredRoutines = filteredRoutines.filter(r => {
+            const [day, month, year] = r.date.split('/');
+            const routineDate = new Date(`${year}-${month}-${day}`);
+            return (!fromDate || routineDate >= fromDate) && (!toDate || routineDate <= toDate);
+          });
+        }
+
+        const csvContent = [
+          'Fecha,Calorías Quemadas (kcal)',
+          ...filteredRoutines.map(r => `${r.date},${r.caloriesBurned || 0}`)
+        ].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `rutinas_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+      })
+      .catch(error => {
+        console.error('Error exporting routine CSV:', error.message);
+        document.getElementById('routineError').textContent = `Error al exportar: ${error.message}. Intenta de nuevo 🔌`;
+        document.getElementById('routineError').style.display = 'block';
+      });
+  }
+
+  function exportMealCsv() {
+    fetch(`${API_BASE_URL}/meals`)
+      .then(response => response.json())
+      .then(meals => {
+        meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
+        let filteredMeals = meals;
+        const fromMonth = document.getElementById('mealFromMonth').value;
+        const toMonth = document.getElementById('mealToMonth').value;
+        if (fromMonth || toMonth) {
+          let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+          let toDate = toMonth ? new Date(toMonth + '-01') : null;
+          if (toDate) {
+            toDate.setMonth(toDate.getMonth() + 1);
+            toDate.setDate(0);
+          }
+          filteredMeals = filteredMeals.filter(m => {
+            const [day, month, year] = m.date.split('/');
+            const mealDate = new Date(`${year}-${month}-${day}`);
+            return (!fromDate || mealDate >= fromDate) && (!toDate || mealDate <= toDate);
+          });
+        }
+
+        const csvContent = [
+          'Fecha,Comida,Calorías Consumidas (kcal)',
+          ...filteredMeals.map(m => `${m.date},${m.meal},${m.calories || 0}`)
+        ].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `comidas_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+      })
+      .catch(error => {
+        console.error('Error exporting meal CSV:', error.message);
+        document.getElementById('mealError').textContent = `Error al exportar: ${error.message}. Intenta de nuevo 🔌`;
+        document.getElementById('mealError').style.display = 'block';
+      });
+  }
+
+  function showSection(section) {
+    console.log('Switching to section:', section);
+    const routinesSection = document.getElementById('routinesSection');
+    const mealsSection = document.getElementById('mealsSection');
+    if (routinesSection && mealsSection) {
+      routinesSection.style.display = section === 'routines' ? 'block' : 'none';
+      mealsSection.style.display = section === 'meals' ? 'block' : 'none';
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      const activeTab = document.querySelector(`.tab[onclick="showView('${view}')"]`);
-      if (activeTab) {
-        activeTab.classList.add('active');
-        console.log(`Activated tab for view: ${view}`);
+      const activeTab = document.querySelector(`.tab[onclick="showSection('${section}')"]`);
+      if (activeTab) activeTab.classList.add('active');
+      if (section === 'routines') {
+        loadCalendar();
+        showView('routineWeeklyView');
       } else {
-        console.error(`Tab for view ${view} not found`);
+        showView('mealWeeklyView');
       }
+    } else {
+      console.error('Error: routinesSection or mealsSection not found');
+    }
+  }
 
-      // Force chart update after DOM is rendered
-      requestAnimationFrame(() => {
-        console.log('Triggering updateViews for:', view);
-        updateViews(view);
-      });
+  function showView(view) {
+    console.log('Switching to view:', view);
+
+    // List of all possible views
+    const views = [
+      'routineWeeklyView',
+      'routinePieView',
+      'routineTableView',
+      'combinedView',
+      'mealWeeklyView',
+      'mealMonthlyView',
+      'mealPieView',
+      'mealTableView'
+    ];
+
+    // Validate view parameter
+    if (!views.includes(view)) {
+      console.error(`Invalid view: ${view}. Available views: ${views.join(', ')}`);
+      return;
     }
 
-    document.getElementById('routineSelect').onchange = () => {
-      const routine = document.getElementById('routineSelect').value;
-      document.getElementById('routineDetailsInput').value = routine ? routineDetailsMap[routine] || '' : '';
-    };
-
-    document.getElementById('prevMonth').onclick = () => {
-      currentDate.setMonth(currentDate.getMonth() - 1);
-      loadCalendar();
-    };
-    document.getElementById('nextMonth').onclick = () => {
-      currentDate.setMonth(currentDate.getMonth() + 1);
-      loadCalendar();
-    };
-    document.getElementById('saveRoutine').onclick = saveRoutine;
-    document.getElementById('routineFromMonth').onchange = () => updateViews('routineTable');
-    document.getElementById('routineToMonth').onchange = () => updateViews('routineTable');
-    document.getElementById('routineExportCsv').onclick = exportRoutineCsv;
-    document.getElementById('saveMeal').onclick = saveMeal;
-    document.getElementById('mealFromMonth').onchange = () => updateViews('mealTable');
-    document.getElementById('mealToMonth').onchange = () => updateViews('mealTable');
-    document.getElementById('mealExportCsv').onclick = exportMealCsv;
-
-    document.getElementById('startTime')?.addEventListener('change', () => {
-      const startTime = document.getElementById('startTime').value;
-      localStorage.setItem('startTime', startTime);
-      updateReminder();
+    // Ensure only the active view is visible
+    views.forEach(v => {
+      const element = document.getElementById(v);
+      if (element) {
+        const shouldBeVisible = v === view;
+        element.style.display = shouldBeVisible ? 'block' : 'none';
+        console.log(`Setting ${v} display to: ${element.style.display} (expected: ${shouldBeVisible ? 'block' : 'none'})`);
+        // Force canvas visibility
+        if (shouldBeVisible) {
+          const canvas = element.querySelector('canvas');
+          if (canvas) {
+            canvas.style.display = 'block';
+            canvas.style.width = '100%';
+            canvas.style.height = '';
+            console.log(`Ensured canvas visibility for ${v}:`, canvas.id);
+          }
+        }
+      } else {
+        console.error(`Element with ID ${v} not found in DOM`);
+      }
     });
 
-    function updateReminder() {
-      const startTime = localStorage.getItem('startTime');
-      const reminder = document.getElementById('reminder');
-      if (startTime && reminder) {
-        const start = new Date(`1970-01-01T${startTime}`);
-        const now = new Date();
-        const hoursPassed = (now.getTime() - start.getTime()) / (1000 * 60 * 60);
-        reminder.textContent = hoursPassed > 4 ? '¡Hora de comer algo! 🍽️' : 'Estás a tiempo para tu comida. 🕒';
-      }
+    // Update active tab
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    const activeTab = document.querySelector(`.tab[onclick="showView('${view}')"]`);
+    if (activeTab) {
+      activeTab.classList.add('active');
+      console.log(`Activated tab for view: ${view}`);
+    } else {
+      console.error(`Tab for view ${view} not found`);
     }
 
-    window.onload = function() {
-      console.log('Page loaded, initializing...');
-      updateDebugInfo();
-      window.addEventListener('resize', updateDebugInfo);
-      loadCalendar();
-      setInterval(updateReminder, 60000);
-      showView('routineWeekly');
-    };
-  </script>
+    // Force chart update after DOM is rendered
+    requestAnimationFrame(() => {
+      console.log('Triggering updateViews for:', view);
+      updateViews(view);
+    });
+  }
+
+  document.getElementById('routineSelect').onchange = () => {
+    const routine = document.getElementById('routineSelect').value;
+    document.getElementById('routineDetailsInput').value = routine ? routineDetailsMap[routine] || '' : '';
+  };
+
+  document.getElementById('prevMonth').onclick = () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    loadCalendar();
+  };
+  document.getElementById('nextMonth').onclick = () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    loadCalendar();
+  };
+  document.getElementById('saveRoutine').onclick = saveRoutine;
+  document.getElementById('routineFromMonth').onchange = () => updateViews('routineTableView');
+  document.getElementById('routineToMonth').onchange = () => updateViews('routineTableView');
+  document.getElementById('routineExportCsv').onclick = exportRoutineCsv;
+  document.getElementById('saveMeal').onclick = saveMeal;
+  document.getElementById('mealFromMonth').onchange = () => updateViews('mealTableView');
+  document.getElementById('mealToMonth').onchange = () => updateViews('mealTableView');
+  document.getElementById('mealExportCsv').onclick = exportMealCsv;
+
+  document.getElementById('startTime')?.addEventListener('change', () => {
+    const startTime = document.getElementById('startTime').value;
+    localStorage.setItem('startTime', startTime);
+    updateReminder();
+  });
+
+  function updateReminder() {
+    const startTime = localStorage.getItem('startTime');
+    const reminder = document.getElementById('reminder');
+    if (startTime && reminder) {
+      const start = new Date(`1970-01-01T${startTime}`);
+      const now = new Date();
+      const hoursPassed = (now.getTime() - start.getTime()) / (1000 * 60 * 60);
+      reminder.textContent = hoursPassed > 4 ? '¡Hora de comer algo! 🍽️' : 'Estás a tiempo para tu comida. 🕒';
+    }
+  }
+
+  window.onload = function() {
+    console.log('Page loaded, initializing...');
+    updateDebugInfo();
+    window.addEventListener('resize', updateDebugInfo);
+    loadCalendar();
+    setInterval(updateReminder, 60000);
+    showView('routineWeeklyView');
+  };
+</script>
 </body>
 </html>
