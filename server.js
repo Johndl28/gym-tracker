@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
@@ -12,7 +11,7 @@ app.use(express.json());
 // Servir archivos estáticos desde el directorio 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
-const uri = process.env.MONGODB_URI || 'mongodb+srv:///calorieAdmin2:ABCDE1234@cluster0.mongodb.net/calorieTracker?retryWrites=true&w=majority';
+const uri = process.env.MONGODB_URI || 'mongodb+srv://calorieAdmin2:ABCDE1234@cluster0.mongodb.net/calorieTracker?retryWrites=true&w=majority';
 const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
 
 async function connectDB() {
@@ -39,6 +38,11 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('Server error:', err.message, err.stack);
   res.status(500).json({ error: 'Error interno del servidor: ' + err.message });
+});
+
+// Ruta raíz para /api
+app.get('/api', (req, res) => {
+  res.status(200).json({ message: 'Gym Tracker API is running' });
 });
 
 // Routines (colección: calorieTracker>gymRoutine>routines)
@@ -157,4 +161,3 @@ connectDB().then(() => {
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`Server running on port ${port}`));
 });
-
