@@ -1,4 +1,4 @@
-
+```javascript
 require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
@@ -33,6 +33,12 @@ async function connectDB() {
 app.use((err, req, res, next) => {
   console.error('Server error:', err.message, err.stack);
   res.status(500).json({ error: `Error interno del servidor: ${err.message}` });
+});
+
+// Middleware para loguear todas las solicitudes
+app.use((req, res, next) => {
+  console.log(`Received ${req.method} request to ${req.url}`);
+  next();
 });
 
 // Routines (colección: calorieTracker>gymRoutine>routines)
@@ -142,7 +148,13 @@ function normalizeDate(dateStr) {
   }
 }
 
+// Ruta de prueba para verificar el servidor
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'Server is running' });
+});
+
 connectDB().then(() => {
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`Server running on port ${port}`));
 });
+
