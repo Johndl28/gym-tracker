@@ -952,19 +952,45 @@
         if (activeTab) activeTab.classList.add('active');
         if (section === 'routines') loadCalendar();
         else updateViews();
+      } else {
+        console.error('Error: routinesSection or mealsSection not found');
       }
     }
 
     function showView(view) {
       console.log('Switching to view:', view);
-      const views = ['routineWeeklyView', 'routinePieView', 'routineTableView', 'combinedView', 'mealWeeklyView', 'mealMonthlyView', 'mealPieView', 'mealTableView'];
+      const views = [
+        'routineWeeklyView',
+        'routinePieView',
+        'routineTableView',
+        'combinedView',
+        'mealWeeklyView',
+        'mealMonthlyView',
+        'mealPieView',
+        'mealTableView'
+      ];
+      
       views.forEach(v => {
         const element = document.getElementById(v);
-        if (element) element.style.display = v === view ? 'block' : 'none';
+        if (element) {
+          element.style.display = v === view ? 'block' : 'none';
+          console.log(`Setting ${v} display to: ${v === view ? 'block' : 'none'}`);
+        } else {
+          console.error(`Element with ID ${v} not found in DOM`);
+        }
       });
+
+      // Update active tab
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       const activeTab = document.querySelector(`.tab[onclick="showView('${view}')"]`);
-      if (activeTab) activeTab.classList.add('active');
+      if (activeTab) {
+        activeTab.classList.add('active');
+        console.log(`Activated tab for view: ${view}`);
+      } else {
+        console.error(`Tab for view ${view} not found`);
+      }
+
+      // Force update of views to ensure data is refreshed
       updateViews();
     }
 
