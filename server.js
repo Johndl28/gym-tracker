@@ -1,12 +1,18 @@
+
+require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
+const path = require('path');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri = 'mongodb+srv://calorieAdmin2:ABCDE1234@calorietracker.qhiq6tw.mongodb.net/?retryWrites=true&w=majority&appName=calorieTracker'; // Reemplaza con tu URI
+// Servir archivos estáticos desde el directorio 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
+'mongodb+srv://calorieAdmin2:ABCDE1234@calorietracker.qhiq6tw.mongodb.net/?retryWrites=true&w=majority&appName=calorieTracker'; // Reemplaza con tu URI
 const client = new MongoClient(uri);
 
 async function connectDB() {
@@ -19,7 +25,7 @@ async function connectDB() {
   }
 }
 
-// Routines
+// Routines (colección: calorieTracker>gymRoutine>routines)
 app.get('/api/routines', async (req, res) => {
   try {
     const db = client.db('calorieTracker');
@@ -63,7 +69,7 @@ app.delete('/api/routines/:date', async (req, res) => {
   }
 });
 
-// Meals
+// Meals (colección: calorieTracker>calorieTracker>calories)
 app.get('/api/meals', async (req, res) => {
   try {
     const db = client.db('calorieTracker');
@@ -110,5 +116,6 @@ function normalizeDate(dateStr) {
 }
 
 connectDB().then(() => {
-  app.listen(3000, () => console.log('Server running on port 3000'));
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => console.log(`Server running on port ${port}`));
 });
