@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>💪 Registro de Rutinas de Gimnasio 🔥</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css?v=2.2.19" rel="stylesheet" onerror="document.getElementById('fallback-style').innerHTML = 'body { font-family: Arial, sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); } .container { max-width: 95%; margin: auto; } .card { background: white; padding: 12px; margin-bottom: 12px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); } .btn-primary { background: linear-gradient(to right, #991b1b, #1f2937); color: white; padding: 10px; border-radius: 12px; } .input-field, select { width: 100%; padding: 10px; border: 2px solid #ef4444; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); } h1, h2 { font-weight: bold; color: #7f1d1d; text-align: center; }';">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css?v=2.2.19" rel="stylesheet" onerror="document.getElementById('fallback-style').innerHTML = 'body { font-family: Arial, sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); } .container { max-width: 95%; margin: auto; } .card { background: white; padding: 12px; margin-bottom: 12px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); } .btn-primary, .btn-delete { background: linear-gradient(to right, #991b1b, #1f2937); color: white; padding: 10px; border-radius: 12px; } .input-field, select { width: 100%; padding: 10px; border: 2px solid #ef4444; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); } h1, h2 { font-weight: bold; color: #7f1d1d; text-align: center; }';">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js?v=4.4.4"></script>
   <style id="fallback-style"></style>
   <style>
@@ -16,9 +16,9 @@
     @media (min-width: 1024px) { .container { max-width: 896px; } }
     .card { background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 0.75rem; margin-bottom: 1.25rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .card:hover { transform: translateY(-0.25rem); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
-    .btn-primary { background: linear-gradient(to right, #991b1b, #1f2937); color: white; font-weight: 600; border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.3s ease, transform 0.2s ease; }
-    .btn-primary:hover { background: linear-gradient(to right, #7f1d1d, #111827); transform: scale(1.02); }
-    .btn-primary:focus { outline: none; box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
+    .btn-primary, .btn-delete { background: linear-gradient(to right, #991b1b, #1f2937); color: white; font-weight: 600; border-radius: 1rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.3s ease, transform 0.2s ease; }
+    .btn-primary:hover, .btn-delete:hover { background: linear-gradient(to right, #7f1d1d, #111827); transform: scale(1.02); }
+    .btn-primary:focus, .btn-delete:focus { outline: none; box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
     .tab { padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; color: #1f2937; background: #fee2e2; cursor: pointer; transition: all 0.2s ease; font-size: 0.75rem; }
     .tab:hover { background: #fecaca; }
     .tab.active { background: #ef4444; color: white; }
@@ -60,6 +60,8 @@
     @media (min-width: 640px) { .emoji { font-size: 1rem; } }
     @media (min-width: 768px) { .emoji { font-size: 1.125rem; } }
     .debug-info { position: fixed; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.25rem; }
+    .btn-delete { padding: 0.5rem; font-size: 0.75rem; }
+    @media (min-width: 640px) { .btn-delete { padding: 0.75rem; font-size: 0.875rem; } }
   </style>
 </head>
 <body>
@@ -141,6 +143,7 @@
               <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2">Fecha</th>
                 <th class="border border-gray-300 p-2">Calorías Quemadas (kcal)</th>
+                <th class="border border-gray-300 p-2">Acción</th>
               </tr>
             </thead>
             <tbody id="completedTableBody"></tbody>
@@ -213,7 +216,7 @@
         }
       } catch (error) {
         console.error('Error accessing localStorage:', error);
-        document.getElementById('error').textContent = 'Error al cargar datos. Intenta recargar. 🔌';
+        document.getElementById('error').textContent = 'Error al cargar datos. Intenta recargar 🔌';
         document.getElementById('error').style.display = 'block';
       }
 
@@ -291,6 +294,23 @@
       } catch (error) {
         console.error('Error saving routine:', error);
         document.getElementById('error').textContent = 'Error al guardar. Intenta de nuevo 🔌';
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    async function deleteRoutine(date) {
+      console.log('Deleting routine for date:', date);
+      try {
+        let routines = JSON.parse(localStorage.getItem('routines') || '[]');
+        routines = routines.filter(r => r.date !== date);
+        localStorage.setItem('routines', JSON.stringify(routines));
+        console.log('Routine deleted, updated routines:', routines);
+        alert('¡Rutina eliminada! 🗑️');
+        document.getElementById('error').style.display = 'none';
+        loadCalendar();
+      } catch (error) {
+        console.error('Error deleting routine:', error);
+        document.getElementById('error').textContent = 'Error al eliminar. Intenta de nuevo 🔌';
         document.getElementById('error').style.display = 'block';
       }
     }
@@ -468,13 +488,16 @@
       }
 
       if (filteredRoutines.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="2" class="border border-gray-300 p-2 text-center">No hay actividades completadas 😔</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="3" class="border border-gray-300 p-2 text-center">No hay actividades completadas 😔</td></tr>';
       } else {
         filteredRoutines.forEach(routine => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td class="border border-gray-300 p-2">${routine.date}</td>
             <td class="border border-gray-300 p-2">${routine.caloriesBurned || 0} kcal 🔥</td>
+            <td class="border border-gray-300 p-2">
+              <button class="btn-delete" onclick="deleteRoutine('${routine.date}')"><span class="emoji">🗑️</span> Eliminar</button>
+            </td>
           `;
           tableBody.appendChild(row);
         });
