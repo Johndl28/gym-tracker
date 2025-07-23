@@ -179,16 +179,16 @@
       const debugInfo = document.getElementById('debugInfo');
       if (!debugInfo) return;
       const width = window.innerWidth;
-      if (width >= 1024) {
-        debugInfo.textContent = 'Desktop View (1024px+)';
-      } else if (width >= 768) {
-        debugInfo.textContent = 'Tablet View (768px-1023px)';
-      } else if (width >= 640) {
-        debugInfo.textContent = 'Small Tablet View (640px-767px)';
-      } else {
-        debugInfo.textContent = 'Mobile View (<640px)';
-      }
+      if (width >= 1024) debugInfo.textContent = 'Desktop View (1024px+)';
+      else if (width >= 768) debugInfo.textContent = 'Tablet View (768px-1023px)';
+      else if (width >= 640) debugInfo.textContent = 'Small Tablet View (640px-767px)';
+      else debugInfo.textContent = 'Mobile View (<640px)';
       console.log('CSS loaded, current view:', debugInfo.textContent);
+    }
+
+    function normalizeDate(dateStr) {
+      const [day, month, year] = dateStr.split('/');
+      return `${parseInt(day).toString().padStart(2, '0')}/${parseInt(month).toString().padStart(2, '0')}/${year}`;
     }
 
     async function loadCalendar() {
@@ -204,10 +204,11 @@
 
       try {
         routines = JSON.parse(localStorage.getItem('routines') || '[]');
-        console.log('Retrieved routines from localStorage:', routines);
+        routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
+        console.log('Retrieved and normalized routines from localStorage:', routines);
         if (!routines.length) {
           console.warn('No routines in localStorage, using mock data');
-          const today = new Date().toLocaleDateString('es-AR');
+          const today = normalizeDate(new Date().toLocaleDateString('es-AR'));
           routines = [
             { date: today, routine: 'Día A - Full Body A + Cardio', details: routineDetailsMap['Día A - Full Body A + Cardio'], caloriesBurned: 500, completed: true },
             { date: today, routine: 'Día B - Full Body B + Cardio', details: routineDetailsMap['Día B - Full Body B + Cardio'], caloriesBurned: 450, completed: true }
@@ -225,7 +226,7 @@
       }
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const date = `${day.toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
+        const date = normalizeDate(`${day}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`);
         const routine = routines.find(r => r.date === date);
         const div = document.createElement('div');
         div.className = `calendar-day ${routine && routine.completed ? 'completed' : ''} ${selectedDay === date ? 'selected' : ''}`;
@@ -241,7 +242,7 @@
     }
 
     function selectDay(date, routine) {
-      selectedDay = date;
+      selectedDay = normalizeDate(date);
       document.querySelectorAll('.calendar-day').forEach(div => div.classList.remove('selected'));
       const dayDiv = Array.from(document.querySelectorAll('.calendar-day')).find(div => div.textContent == date.split('/')[0]);
       if (dayDiv) dayDiv.classList.add('selected');
@@ -279,6 +280,7 @@
 
       try {
         let routines = JSON.parse(localStorage.getItem('routines') || '[]');
+        routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
         const existingIndex = routines.findIndex(r => r.date === selectedDay);
         const routineData = { date: selectedDay, routine, details, caloriesBurned, completed };
         if (existingIndex >= 0) {
@@ -299,12 +301,26 @@
     }
 
     async function deleteRoutine(date) {
-      console.log('Deleting routine for date:', date);
+      date = normalizeDate(date);
+      console.log('Attempting to delete routine for date:', date);
+      if (!confirm(`¿Estás seguro de eliminar la rutina del ${date}? 🗑️`)) {
+        console.log('Deletion cancelled by user');
+        return;
+      }
       try {
         let routines = JSON.parse(localStorage.getItem('routines') || '[]');
+        routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
+        console.log('Routines before deletion:', routines);
+        const initialLength = routines.length;
         routines = routines.filter(r => r.date !== date);
+        if (routines.length === initialLength) {
+          console.warn('No routine found for date:', date);
+          document.getElementById('error').textContent = `No se encontró rutina para ${date} ⚠️`;
+          document.getElementById('error').style.display = 'block';
+          return;
+        }
         localStorage.setItem('routines', JSON.stringify(routines));
-        console.log('Routine deleted, updated routines:', routines);
+        console.log('Routines after deletion:', routines);
         alert('¡Rutina eliminada! 🗑️');
         document.getElementById('error').style.display = 'none';
         loadCalendar();
@@ -322,7 +338,7 @@
       return Array.from({ length: 7 }, (_, i) => {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
-        return date.toLocaleDateString('es-AR');
+        return normalizeDate(date.toLocaleDateString('es-AR'));
       });
     }
 
@@ -337,10 +353,11 @@
         let routines = [];
         try {
           routines = JSON.parse(localStorage.getItem('routines') || '[]');
+          routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
           console.log('Retrieved routines for charts:', routines);
           if (!routines.length) {
             console.warn('No routines for charts, using mock data');
-            const today = new Date().toLocaleDateString('es-AR');
+            const today = normalizeDate(new Date().toLocaleDateString('es-AR'));
             routines = [
               { date: today, routine: 'Día A - Full Body A + Cardio', details: routineDetailsMap['Día A - Full Body A + Cardio'], caloriesBurned: 500, completed: true },
               { date: today, routine: 'Día B - Full Body B + Cardio', details: routineDetailsMap['Día B - Full Body B + Cardio'], caloriesBurned: 450, completed: true }
@@ -471,6 +488,7 @@
       tableBody.innerHTML = '';
 
       let routines = JSON.parse(localStorage.getItem('routines') || '[]');
+      routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
       let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
       let toDate = toMonth ? new Date(toMonth + '-01') : null;
       if (toDate) {
@@ -515,6 +533,7 @@
       }
 
       let routines = JSON.parse(localStorage.getItem('routines') || '[]');
+      routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
       let filteredRoutines = routines.filter(r => r.completed);
       if (fromDate || toDate) {
         filteredRoutines = filteredRoutines.filter(r => {
