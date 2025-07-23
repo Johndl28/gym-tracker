@@ -5,7 +5,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri = 'mongodb+srv://<user>:<password>@cluster0.mongodb.net/calorieTracker?retryWrites=true&w=majority'; // Reemplaza con tu URI
+const uri = 'mongodb+srv://calorieAdmin2:ABCDE1234@calorietracker.qhiq6tw.mongodb.net/?retryWrites=true&w=majority&appName=calorieTracker'; // Reemplaza con tu URI
+
 const client = new MongoClient(uri);
 
 async function connectDB() {
