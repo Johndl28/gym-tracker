@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js?v=4.4.4"></script>
   <style id="fallback-style"></style>
   <style>
+    /* Estilos sin cambios, omitidos por brevedad */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
     body { font-family: 'Inter', sans-serif; background: linear-gradient(to bottom, #fef2f2, #dc2626); }
     .container { max-width: 95%; margin: 0 auto; padding: 0.5rem; }
@@ -276,7 +278,7 @@
   </div>
 
   <script>
-    const API_BASE_URL = 'http://localhost:3000/api'; // Ajusta según tu backend
+    const API_BASE_URL = 'https://your-app.onrender.com/api'; // Reemplaza con la URL de Render
     const routineDetailsMap = {
       "Día A - Full Body A + Cardio": "Sentadillas: 3 series x 10 rep\nPress de banca: 3 series x 8 rep\nRemo con barra: 3 series x 10 rep\nPlancha: 3 x 30s\nCardio: 20 min cinta",
       "Día B - Full Body B + Cardio": "Peso muerto: 3 series x 8 rep\nPress militar: 3 series x 10 rep\nDominadas: 3 series x 8 rep\nAbdominales: 3 x 15 rep\nCardio: 15 min elíptica",
@@ -315,15 +317,19 @@
       let routines = [];
 
       try {
-        const response = await fetch(`${API_BASE_URL}/routines`);
-        if (!response.ok) throw new Error('Error al obtener rutinas');
+        const response = await fetch(`${API_BASE_URL}/routines`, { method: 'GET' });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Error al obtener rutinas: ${response.status} ${errorData.error || response.statusText}`);
+        }
         routines = await response.json();
         routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
         console.log('Retrieved routines from MongoDB:', routines);
       } catch (error) {
-        console.error('Error fetching routines:', error);
-        document.getElementById('routineError').textContent = 'Error al cargar datos. Intenta recargar 🔌';
+        console.error('Error fetching routines:', error.message);
+        document.getElementById('routineError').textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
         document.getElementById('routineError').style.display = 'block';
+        return;
       }
 
       for (let i = 0; i < firstDay; i++) {
@@ -385,19 +391,23 @@
 
       try {
         const routineData = { date: selectedDay, routine, details, caloriesBurned, completed };
+        console.log('Sending routine data:', routineData);
         const response = await fetch(`${API_BASE_URL}/routines`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(routineData)
         });
-        if (!response.ok) throw new Error('Error al guardar rutina');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Error al guardar rutina: ${response.status} ${errorData.error || response.statusText}`);
+        }
         console.log('Saved routine to MongoDB:', routineData);
         alert('¡Rutina guardada! 🎉');
         document.getElementById('routineError').style.display = 'none';
         loadCalendar();
       } catch (error) {
-        console.error('Error saving routine:', error);
-        document.getElementById('routineError').textContent = 'Error al guardar. Intenta de nuevo 🔌';
+        console.error('Error saving routine:', error.message);
+        document.getElementById('routineError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
         document.getElementById('routineError').style.display = 'block';
       }
     }
@@ -415,16 +425,16 @@
           headers: { 'Content-Type': 'application/json' }
         });
         if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.error || `No se encontró rutina para ${date}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Error al eliminar rutina: ${response.status} ${errorData.error || response.statusText}`);
         }
         console.log('Routine deleted from MongoDB for date:', date);
         alert('¡Rutina eliminada! 🗑️');
         document.getElementById('routineError').style.display = 'none';
         loadCalendar();
       } catch (error) {
-        console.error('Error deleting routine:', error);
-        document.getElementById('routineError').textContent = error.message || 'Error al eliminar. Intenta de nuevo 🔌';
+        console.error('Error deleting routine:', error.message);
+        document.getElementById('routineError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
         document.getElementById('routineError').style.display = 'block';
       }
     }
@@ -442,12 +452,16 @@
 
       try {
         const mealData = { date: today, meal, calories };
+        console.log('Sending meal data:', mealData);
         const response = await fetch(`${API_BASE_URL}/meals`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(mealData)
         });
-        if (!response.ok) throw new Error('Error al guardar comida');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Error al guardar comida: ${response.status} ${errorData.error || response.statusText}`);
+        }
         console.log('Saved meal to MongoDB:', mealData);
         alert('¡Comida registrada! 🎉');
         document.getElementById('mealSelect').value = '';
@@ -455,8 +469,8 @@
         document.getElementById('mealError').style.display = 'none';
         updateViews();
       } catch (error) {
-        console.error('Error saving meal:', error);
-        document.getElementById('mealError').textContent = 'Error al guardar. Intenta de nuevo 🔌';
+        console.error('Error saving meal:', error.message);
+        document.getElementById('mealError').textContent = `Error al guardar: ${error.message}. Intenta de nuevo 🔌`;
         document.getElementById('mealError').style.display = 'block';
       }
     }
@@ -474,16 +488,16 @@
           headers: { 'Content-Type': 'application/json' }
         });
         if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.error || `No se encontró comida para ${date} - ${meal}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Error al eliminar comida: ${response.status} ${errorData.error || response.statusText}`);
         }
         console.log('Meal deleted from MongoDB for date:', date, 'meal:', meal);
         alert('¡Comida eliminada! 🗑️');
         document.getElementById('mealError').style.display = 'none';
         updateViews();
       } catch (error) {
-        console.error('Error deleting meal:', error);
-        document.getElementById('mealError').textContent = error.message || 'Error al eliminar. Intenta de nuevo 🔌';
+        console.error('Error deleting meal:', error.message);
+        document.getElementById('mealError').textContent = `Error al eliminar: ${error.message}. Intenta de nuevo 🔌`;
         document.getElementById('mealError').style.display = 'block';
       }
     }
@@ -520,19 +534,26 @@
 
       try {
         const [routinesResponse, mealsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/routines`),
-          fetch(`${API_BASE_URL}/meals`)
+          fetch(`${API_BASE_URL}/routines`, { method: 'GET' }),
+          fetch(`${API_BASE_URL}/meals`, { method: 'GET' })
         ]);
-        if (!routinesResponse.ok) throw new Error('Error al obtener rutinas');
-        if (!mealsResponse.ok) throw new Error('Error al obtener comidas');
+        if (!routinesResponse.ok) {
+          const errorData = await routinesResponse.json().catch(() => ({}));
+          throw new Error(`Error al obtener rutinas: ${routinesResponse.status} ${errorData.error || routinesResponse.statusText}`);
+        }
+        if (!mealsResponse.ok) {
+          const errorData = await mealsResponse.json().catch(() => ({}));
+          throw new Error(`Error al obtener comidas: ${mealsResponse.status} ${errorData.error || mealsResponse.statusText}`);
+        }
         routines = await routinesResponse.json();
         meals = await mealsResponse.json();
         routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
         meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
         console.log('Retrieved from MongoDB:', { routines, meals });
       } catch (error) {
-        console.error('Error fetching data:', error);
-        routineError.textContent = mealError.textContent = 'Error al cargar datos. Intenta recargar 🔌';
+        console.error('Error fetching data:', error.message);
+        routineError.textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
+        mealError.textContent = `Error al cargar datos: ${error.message}. Intenta recargar 🔌`;
         routineError.style.display = mealError.style.display = 'block';
         return;
       }
@@ -843,21 +864,20 @@
     }
 
     function exportRoutineCsv() {
-      const fromMonth = document.getElementById('routineFromMonth').value;
-      const toMonth = document.getElementById('routineToMonth').value;
-      let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
-      let toDate = toMonth ? new Date(toMonth + '-01') : null;
-      if (toDate) {
-        toDate.setMonth(toDate.getMonth() + 1);
-        toDate.setDate(0);
-      }
-
       fetch(`${API_BASE_URL}/routines`)
         .then(response => response.json())
         .then(routines => {
           routines = routines.map(r => ({ ...r, date: normalizeDate(r.date) }));
           let filteredRoutines = routines.filter(r => r.completed);
-          if (fromDate || toDate) {
+          const fromMonth = document.getElementById('routineFromMonth').value;
+          const toMonth = document.getElementById('routineToMonth').value;
+          if (fromMonth || toMonth) {
+            let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+            let toDate = toMonth ? new Date(toMonth + '-01') : null;
+            if (toDate) {
+              toDate.setMonth(toDate.getMonth() + 1);
+              toDate.setDate(0);
+            }
             filteredRoutines = filteredRoutines.filter(r => {
               const [day, month, year] = r.date.split('/');
               const routineDate = new Date(`${year}-${month}-${day}`);
@@ -876,28 +896,27 @@
           link.click();
         })
         .catch(error => {
-          console.error('Error exporting routine CSV:', error);
-          document.getElementById('routineError').textContent = 'Error al exportar. Intenta de nuevo 🔌';
+          console.error('Error exporting routine CSV:', error.message);
+          document.getElementById('routineError').textContent = `Error al exportar: ${error.message}. Intenta de nuevo 🔌`;
           document.getElementById('routineError').style.display = 'block';
         });
     }
 
     function exportMealCsv() {
-      const fromMonth = document.getElementById('mealFromMonth').value;
-      const toMonth = document.getElementById('mealToMonth').value;
-      let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
-      let toDate = toMonth ? new Date(toMonth + '-01') : null;
-      if (toDate) {
-        toDate.setMonth(toDate.getMonth() + 1);
-        toDate.setDate(0);
-      }
-
       fetch(`${API_BASE_URL}/meals`)
         .then(response => response.json())
         .then(meals => {
           meals = meals.map(m => ({ ...m, date: normalizeDate(m.date) }));
           let filteredMeals = meals;
-          if (fromDate || toDate) {
+          const fromMonth = document.getElementById('mealFromMonth').value;
+          const toMonth = document.getElementById('mealToMonth').value;
+          if (fromMonth || toMonth) {
+            let fromDate = fromMonth ? new Date(fromMonth + '-01') : null;
+            let toDate = toMonth ? new Date(toMonth + '-01') : null;
+            if (toDate) {
+              toDate.setMonth(toDate.getMonth() + 1);
+              toDate.setDate(0);
+            }
             filteredMeals = filteredMeals.filter(m => {
               const [day, month, year] = m.date.split('/');
               const mealDate = new Date(`${year}-${month}-${day}`);
@@ -916,8 +935,8 @@
           link.click();
         })
         .catch(error => {
-          console.error('Error exporting meal CSV:', error);
-          document.getElementById('mealError').textContent = 'Error al exportar. Intenta de nuevo 🔌';
+          console.error('Error exporting meal CSV:', error.message);
+          document.getElementById('mealError').textContent = `Error al exportar: ${error.message}. Intenta de nuevo 🔌`;
           document.getElementById('mealError').style.display = 'block';
         });
     }
@@ -974,7 +993,7 @@
 
     document.getElementById('startTime')?.addEventListener('change', () => {
       const startTime = document.getElementById('startTime').value;
-      localStorage.setItem('startTime', startTime); // Único uso de localStorage para el recordatorio
+      localStorage.setItem('startTime', startTime);
       updateReminder();
     });
 
@@ -999,3 +1018,4 @@
   </script>
 </body>
 </html>
+```
