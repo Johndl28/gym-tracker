@@ -12,7 +12,7 @@ app.use(express.json());
 // Servir archivos estáticos desde el directorio 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
-'mongodb+srv://calorieAdmin2:ABCDE1234@calorietracker.qhiq6tw.mongodb.net/?retryWrites=true&w=majority&appName=calorieTracker'; // Reemplaza con tu URI
+const uri = process.env.MONGODB_URI || 'mongodb+srv://calorieAdmin2:ABCDE1234@calorietracker.qhiq6tw.mongodb.net/?retryWrites=true&w=majority&appName=calorieTracker'; // Reemplaza con tu URI
 const client = new MongoClient(uri);
 
 async function connectDB() {
